@@ -1,0 +1,113 @@
+{
+    "domains": [
+        {
+            "id": "pepfar-msp",
+            "title": "PEPFAR MSP",
+            "logo": "https://www.icfcreative.com/2019/datim/images/logo.png",
+            "backgroundImage": "url(./assets/GettyImages_homepage.png)",
+            "name": "PEPFAR Metadata Sharing Platform",
+            "description": "The U.S. President’s Emergency Plan for AIDS Relief (PEPFAR) works to accelerate progress toward achieving HIV/AIDS epidemic control in more than 50 countries around the world.",
+            "attributes": {},
+            "initialAction": "loadLandingPage('pepfar-msp-landing-page')",
+            "sources": [
+                {
+                    "id": "datim-mer",
+                    "title": "DATIM MER",
+                    "name": "DATIM Monitoring, Evaluation and Results Indicators",
+                    "initialAction": "loadMetadataset('reference-indicators')",
+                    "metadataSets": [
+                        {
+                            "id": "reference-indicators",
+                            "name": "PEPFAR MER Reference Indicators",
+                            "title": "Reference Indicators",
+                            "connectorId": "ocl-custom-pepfar-msp-ref-indicator",
+                            "url": "https://api.staging.openconceptlab.org/orgs/PEPFAR-Test7/sources/MER/",
+                            "initialAction": "fetchSearchResults",
+                            "attributes": {
+                                "org": "PEPFAR-Test7"
+                            }
+                        },
+                        {
+                            "id": "data-elements",
+                            "name": "DATIM Data Elements",
+                            "title": "Data Elements",
+                            "connectorId": "ocl-custom-pepfar-msp-data-elements",
+                            "url": "https://api.staging.openconceptlab.org/orgs/PEPFAR-Test7/sources/MER/",
+                            "initialAction": "fetchSearchResults"
+                        }
+                    ]
+                },
+                {
+                    "id": "pepfar-projects",
+                    "title": "PEPFAR Projects",
+                    "name": "PEPFAR Projects",
+                    "metadataSets": [
+                        {
+                            "id": "imap",
+                            "name": "MOH Indicator Mapping",
+                            "title": "PEPFAR MOH Alignment Indicator Mappings",
+                            "connectorId": "ocl-custom-pepfar-imap",
+                            "url": "https://test.ohie.dagim.org:5000/pepfar-imap-export/",
+                            "initialAction": "loadLandingPage"
+                        },
+                        {
+                            "id": "plm",
+                            "name": "PLM",
+                            "title": "PEPFAR Person-level Monitoring",
+                            "connectorId": "ocl-custom-pepfar-plm",
+                            "url": "https://api.staging.openconceptlab.org/",
+                            "initialAction": "loadLandingPage"
+                        },
+                        {
+                            "id": "qmap",
+                            "name": "PEPFAR PLM QMAPs",
+                            "title": "PEPFAR PLM Questionnaire Mappings",
+                            "connectorId": "ocl-custom-pepfar-qmap",
+                            "url": "https://test.ohie.dagim.org:5000/pepfar-qmap-export/",
+                            "initialAction": "loadLandingPage"
+                        }
+                    ]
+                }
+            ],
+            "connectors": [
+                {
+                    "id": "ocl-custom-pepfar-msp-ref-indicator"
+                },
+                {
+                    "id": "ocl-custom-pepfar-msp-data-elements"
+                }
+            ]
+        },
+        {
+            "id": "ocl",
+            "title": "OCL",
+            "logo": "https://openconceptlab.org/static/images/ocl-logo.png",
+            "name": "Open Concept Lab",
+            "description": "The Open Concept Lab project is focused on collaborative terminology and indicator management, mapping, and dictionary harmonization.",
+            "sources": [
+                {
+                    "id": "OclSource",
+                    "metadataSets": [
+                        {
+                            "id": "ciel",
+                            "name": "Columbia International eHealth Laboratory Interface Terminology",
+                            "title": "CIEL",
+                            "url": "https://openconceptlab.org/orgs/CIEL/sources/CIEL/"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "connectors": [
+        {
+            "id": "ocl-custom-pepfar-msp-ref-indicator",
+            "authenticationMethod": "None",
+            "searchFilterSettings": ""
+        },
+        {
+            "id": "ocl-custom-pepfar-msp-data-elements",
+            "authenticationMethod": "None"
+        }
+    ]
+}
