@@ -10,6 +10,7 @@ export const initialState = {
   source: domainConfig.domains[0].sources[0],
   metadataSets: domainConfig.domains[0].sources[0].metadataSets,
   metadataSet: domainConfig.domains[0].sources[0].metadataSets[0],
+  connector: null, //.. The active connector as a Connector subclass, set when an API query is made
   password: '',
   indicatorName: '',
   currentIndicator: [],

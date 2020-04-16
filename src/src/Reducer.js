@@ -21,7 +21,6 @@ export const reducer = (state, action) => {
         ...state,
         currentIndicator: action.currentIndicator
       }
-
     case 'changeMatchDataElements':
       return {
         ...state,
@@ -36,6 +35,7 @@ export const reducer = (state, action) => {
         metadataSets: action.domain.sources[0].metadataSets,
         metadataSet: action.domain.sources[0].metadataSets[0]
       }
+
     case 'changeSource':
       return {
         ...state,
@@ -52,6 +52,11 @@ export const reducer = (state, action) => {
       return {
         ...state,
         metadataSet: action.metadataSet
+      }
+    case 'setConnector':
+      return {
+        ...state,
+        connector: action.connector
       }
     default:
       return state;

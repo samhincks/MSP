@@ -17,6 +17,57 @@ What’s the structure of metadata for each resource type in the metadata set?
 
 //.. Implementation questions: 
 //... Should this be a class? Should we do a new class for MSP and OCL connector?
+export class Connector {
+
+    constructor(metadataSet) {
+        this.metadataSet = metadataSet;
+    }
+
+
+    /* template for this function is loadIndicatorData which does additional things to the data
+   that we should consider before implementing novel data / ui processing */
+    getJSONDataFromAPI = async () => {
+        try {
+            console.log("Fetching from " + this.url);
+            const response = await fetch(this.url);
+
+            if (!response.ok) {
+                console.log(response);
+                throw new Error(
+                    `Error when fetching data: ${response.status} ${response.statusText}`
+                );
+            }
+            const jsonData = await response.json();
+            if (!jsonData.length || jsonData.length === 0) {
+                console.log("jsonData is empty");
+                //setIndGroupLoading(false);
+                throw new Error(
+                    `Warning data is empty from source `
+                );
+            }
+            this.jsonData = jsonData;
+            return jsonData;
+
+        } catch (e) {
+            console.log("error:" + e.message);
+            //setError(e.message);
+        }
+    }
+}
+
+export class PepfarIndicatorConnector extends Connector {
+    constructor(metadataSet) {
+        super(metadataSet);
+        this.url = metadataSet.url + "/concepts/?verbose=true&limit=0&conceptClass=\"Reference+Indicator\"";
+    }
+}
+
+export class PepfarElementConnector extends Connector {
+    constructor(metadataSet) {
+        super(metadataSet);
+        this.url = metadataSet.url + "concepts/?verbose=true&conceptClass=\"Data+Element\"&limit=10&page=1";
+    }
+}
 
 
 export async function queryMetadataSet(metadataSet) {
@@ -38,7 +89,7 @@ function getQueryUrlForMetadataSet(metadataSet) {
         case 'reference-indicators':
             return url + "/concepts/?verbose=true&limit=0&conceptClass=\"Reference+Indicator\"";
         case 'data-elements':
-            return url + "concepts/?verbose=true&conceptClass=\"Data+Element\"&limit=10&page=1"
+            return url + "concepts/?verbose=true&conceptClass=\"Data+Element\"&limit=10&page=1";
     }
 }
 

@@ -6,6 +6,7 @@ TODO:
 import React from 'react';
 import { makeStyles } from "@material-ui/core/styles";
 import SourceSelector from './SourceSelector';
+import MetaDataView from './MetaDataView';
 
 const useStyles = makeStyles(theme => ({
     container: {
@@ -25,6 +26,7 @@ export default function DataInterface() {
     return (
         <div className={classes.container}>
             <SourceSelector />
+            <MetaDataView />
         </div>
     )
 }

@@ -21,6 +21,9 @@ import LocalOfferOutlinedIcon from '@material-ui/icons/LocalOfferOutlined';
 import { useStateValue } from "../ContextSetup";
 import { queryMetadataSet } from "../Connector/Connector";
 
+import { Connector } from "../Connector/Connector";
+import { PepfarIndicatorConnector, PepfarElementConnector } from "../Connector/Connector";
+
 const useStyles = makeStyles(theme => ({
     container: {
         marginTop: '50px'
@@ -76,11 +79,29 @@ export default function SourceSelector() {
         })
     }
 
-    const updateMetadataset = (metadataSet) => {
-        queryMetadataSet(metadataSet);
+    const updateMetadataset = async (metadataSet) => {
+        let connector;//.. TODO: handle all cases
+
+        switch (metadataSet.id) {
+            case 'reference-indicators':
+                connector = new PepfarIndicatorConnector(metadataSet);
+                break;
+            case 'data-elements':
+                connector = new PepfarElementConnector(metadataSet);
+                break;
+        }
+
+        const jsonData = await connector.getJSONDataFromAPI();
+        console.log(jsonData);
+
         dispatch({
             type: 'changeMetadataset',
             metadataSet: metadataSet
+        })
+
+        dispatch({
+            type: 'setConnector',
+            connector: connector
         })
     }
 
