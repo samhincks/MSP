@@ -1,16 +1,42 @@
 import domainConfig from "./domainConfig.json";
+import { Source, createConnector } from "./Connector/Connector.js"
+import sourceConfig from "./sourceConfig.json";
+import SourceSelector from './DataInterface/SourceSelector.js';
+
+//.. Instantiate a Default Source for the Domain
+let initDomain = domainConfig.domains[0];
+let initSources = initDomain.sources;
+let initSourceOfDomain = initSources[0];
+let initMetadataSets = null; //.. metadatasets are set with help of Source class because sometimes they autopopulate with API call
+let initMetadataSet = null;
+
+//.. ignore sourceConfigObj for now; incorporate later
+let sourceConfigObj = sourceConfig.sourceProfiles.find(obj => obj.id == initSourceOfDomain.sourceProfile);
+
+let connector;
+
+if (sourceConfigObj == null) {
+  connector = createConnector(initSourceOfDomain);
+  console.log("WARNING: connector " + initSourceOfDomain + " is not implemented in sourceconfig file");
+}
+else {
+  connector = createConnector(initSourceOfDomain, sourceConfigObj);
+}
+
+//.. TODO make default be specified by the ID
 
 export const initialState = {
   title: 'Welcome to the OCL Metadata Browser',
   group: 'testing',
   user: '',
   domains: domainConfig.domains,
-  domain: domainConfig.domains[0],
-  sources: domainConfig.domains[0].sources,
-  source: domainConfig.domains[0].sources[0],
-  metadataSets: domainConfig.domains[0].sources[0].metadataSets,
-  metadataSet: domainConfig.domains[0].sources[0].metadataSets[0],
-  connector: null, //.. The active connector as a Connector subclass, set when an API query is made
+  domain: initDomain,
+  sources: initSources,
+  source: initSourceOfDomain,
+  metadataSets: initMetadataSets, // a set of metadatasets for a source as known from domain config or API request
+  metadataSet: initMetadataSet, // the currently selected metadataSet
+  connector: connector, // a connector corresponding to a source
+  searchResults: null, // searchResults for a metadataset as retrieved with API request
   password: '',
   indicatorName: '',
   currentIndicator: [],

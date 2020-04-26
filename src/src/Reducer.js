@@ -1,4 +1,4 @@
-
+import { Connector, createConnector } from "./Connector/Connector.js"
 
 
 export const reducer = (state, action) => {
@@ -26,38 +26,60 @@ export const reducer = (state, action) => {
         ...state,
         matchDataElements: action.matchDataElements
       }
+
     case 'changeDomain':
       return {
         ...state,
         domain: action.domain,
         sources: action.domain.sources,
         source: action.domain.sources[0],
-        metadataSets: action.domain.sources[0].metadataSets,
-        metadataSet: action.domain.sources[0].metadataSets[0]
+        connector: createConnector(action.domain.sources[0])
+      }
+
+    case 'changeSources':
+      return {
+        ...state,
+        sources: action.sources,
+        connector: createConnector(action.sources[0])
       }
 
     case 'changeSource':
       return {
         ...state,
-        source: action.source,
-        metadataSets: action.source.metadataSets,
-        metadataSet: action.source.metadataSets[0]
+        connector: createConnector(action.source),
+        source: action.source
+        // metadataSets: action.source.metadataSets,
+        // metadataSet: action.source.metadataSets[0]
       }
-    case 'changeSources':
+
+    case 'changeMetadataSets':
       return {
         ...state,
-        sources: action.sources
+        metadataSets: action.metadataSets,
+        metadataSet: action.metadataSets[0]
       }
-    case 'changeMetadataset':
+
+    case 'changeMetadataSet':
+      console.log(action.metadataSet);
       return {
         ...state,
         metadataSet: action.metadataSet
       }
-    case 'setConnector':
+
+
+    case 'changeSearchResults':
       return {
         ...state,
-        connector: action.connector
+        searchResults: action.searchResults
       }
+
+
+    case 'setFilteredData':
+      return {
+        ...state,
+        filtered: action.filtered
+      }
+
     default:
       return state;
   }

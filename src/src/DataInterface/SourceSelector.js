@@ -4,7 +4,7 @@ on the value
 
 - Some code is refactored from Shortcut
 */
-import React, { useState, Fragment } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import domainConfig from '../domainConfig.json';
 import { makeStyles } from '@material-ui/core/styles';
 import Select from '@material-ui/core/Select';
@@ -19,10 +19,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faRibbon } from '@fortawesome/free-solid-svg-icons'
 import LocalOfferOutlinedIcon from '@material-ui/icons/LocalOfferOutlined';
 import { useStateValue } from "../ContextSetup";
-import { queryMetadataSet } from "../Connector/Connector";
+import { queryMetadataSet, OCLConnector } from "../Connector/apiQueries";
 
-import { Connector } from "../Connector/Connector";
-import { PepfarIndicatorConnector, PepfarElementConnector } from "../Connector/Connector";
+
 
 const useStyles = makeStyles(theme => ({
     container: {
@@ -70,50 +69,49 @@ export default function SourceSelector() {
 
     const classes = useStyles();
 
-    const [{ sources, source, metadataSets, metadataSet }, dispatch] = useStateValue();
+    const [{ domain, sources, source, connector, metadataSets }, dispatch] = useStateValue();
+
+    // Hook tied to changes in connector and domain
+    useEffect(() => {
+        async function updateMetadatasets() {
+            const metadataSets = await connector.getMetadataSets();
+
+            dispatch({
+                type: 'changeMetadataSets',
+                metadataSets: metadataSets
+            })
+        }
+
+        updateMetadatasets()
+    }, [source]); //.. if this array is empty, this hook is like componentDidMount. 
 
     const updateSource = (source) => {
+        //.. do we need to update Source?
         dispatch({
             type: 'changeSource',
             source: source
         })
     }
 
-    const updateMetadataset = async (metadataSet) => {
-        let connector;//.. TODO: handle all cases
 
-        switch (metadataSet.id) {
-            case 'reference-indicators':
-                connector = new PepfarIndicatorConnector(metadataSet);
-                break;
-            case 'data-elements':
-                connector = new PepfarElementConnector(metadataSet);
-                break;
-        }
-
-        const jsonData = await connector.getJSONDataFromAPI();
-        console.log(jsonData);
-
+    //.. the component to update when metadataSets is changed (which it is when the async call is returned in Header.js in updateMetadatasets).
+    const updateMetadataset = (metadataSet) => {
         dispatch({
-            type: 'changeMetadataset',
+            type: 'changeMetadataSet',
             metadataSet: metadataSet
-        })
-
-        dispatch({
-            type: 'setConnector',
-            connector: connector
         })
     }
 
     //.. Create React component to be placed in relevant area in Domain (which has code sucked out from Indicator.js)
     //.. Todo: add FontAwesomeIcon
-
+    //.. Todo, make metadatasets set by Reducer changes so that they can be called when APi returns inSource
+    console.log(sources);
     return (
         <div className={classes.container}>
             <Paper className={classes.sidebar}>
                 <Grid container>
                     <Grid item xs={12} md={12}  >
-                        {sources.length > 1 &&
+                        {sources.length > 0 &&
                             <SelectContainer>
                                 <Select value={source} onChange={(e) => updateSource(e.target.value)} labelId="label" id="select">
                                     {sources.map(source =>
@@ -123,15 +121,17 @@ export default function SourceSelector() {
                             </SelectContainer>
                         }
 
-                        {metadataSets.map(metadataSet =>
-                            <Button variant="outlined"
-                                key={metadataSet.id} value={metadataSet}
-                                onClick={() => updateMetadataset(metadataSet)}
-                                color="primary"
-                                className={classes.shortcutButton}>
-                                <LocalOfferOutlinedIcon style={{ color: '#1D5893', marginRight: '5px' }} />  {metadataSet.title}
-                            </Button>
-                        )}
+                        { //.. todo make metadatasets the one seletected
+                            metadataSets && metadataSets.map(metadataSet =>
+                                <Button variant="outlined"
+                                    key={metadataSet.id} value={metadataSet}
+                                    onClick={() => updateMetadataset(metadataSet)}
+                                    color="primary"
+                                    className={classes.shortcutButton}>
+                                    <LocalOfferOutlinedIcon style={{ color: '#1D5893', marginRight: '5px' }} />  {metadataSet.title}
+                                </Button>
+
+                            )}
                     </Grid>
                 </Grid>
             </Paper>

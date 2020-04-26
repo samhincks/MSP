@@ -1,15 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import styled from "styled-components";
 import { Grid, Container } from "@material-ui/core";
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import { makeStyles } from "@material-ui/core/styles";
-import Modal from "@material-ui/core/Modal";
-import Fade from "@material-ui/core/Fade";
-import Backdrop from "@material-ui/core/Backdrop";
-import Button from "@material-ui/core/Button";
-import { TextField } from "@material-ui/core";
 
 import { useStateValue } from "../ContextSetup";
 
@@ -46,13 +41,13 @@ const SelectContainer = styled.div`
     position:relative;
 `
 
-
 export default function Header() {
   const classes = useStyles();
-  const [{ domains, domain }, dispatch] = useStateValue();
+  const [{ domains, domain, source }, dispatch] = useStateValue();
   const logoUrl = domain.logo; //.. TODO: change this to the domain chosen in this file.
 
   const updateDomain = (domain) => {
+    console.log("updating domain");
     dispatch({
       type: 'changeDomain',
       domain: domain
