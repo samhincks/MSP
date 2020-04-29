@@ -40,8 +40,6 @@ export default function MetaDataView() {
     // Hook tied to changes in domain, source, and metadataSet
     useEffect(() => {
         async function updateSearchResults() {
-            console.log("updating search results");
-
             if (metadataSet == null) return;
             const searchResults = await connector.getSearchResults(metadataSet);
 
@@ -66,8 +64,8 @@ export default function MetaDataView() {
             }
 
             <DataSetsGrid>
-                {searchResults && searchResults.map(dataset =>
-                    <MinimalDataSetView dataset={dataset} />
+                {searchResults && searchResults.map(resource =>
+                    <MinimalDataSetView key={resource.id} resource={resource} />
                 )}
             </DataSetsGrid>
 
@@ -95,7 +93,7 @@ const MinimalDatasetContainer = styled.div`
 const DataSetView = (props) => {
     return (
         <DataSetContainer>
-            <h2>{props.dataset.display_name}</h2>
+            <h2>{props.dataset.getTitle()}</h2>
             {props.dataset && props.dataset.descriptions && props.dataset.descriptions[0] && <p>{props.dataset.descriptions[0].description}</p>}
         </DataSetContainer>
     )
@@ -104,7 +102,7 @@ const DataSetView = (props) => {
 const MinimalDataSetView = (props) => {
     return (
         <MinimalDatasetContainer>
-            <p>{props.dataset.display_name.toLowerCase()}</p>
+            <p>{props.resource.getTitle()}</p>
         </MinimalDatasetContainer>
     )
 }

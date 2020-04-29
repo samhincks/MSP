@@ -24,6 +24,7 @@ tailored to different UI components and HTTP Responses. The project
 is completely open source, and developers may extend these parts.
 */
 import { getJSONDataFromAPI } from "./apiQueries";
+import { Resource, fhirSearchResult, oclSearchResult } from "./Resource";
 
 export class Connector {
 
@@ -40,15 +41,20 @@ export class Connector {
         }
     }
 
-    //.. method is
     async getMetadataSets() {
         if (!this.doAutopopulateMetadataSets)
             return this.metadataSets;
 
-        else return []; //.. this method should be overwritten with the unique Connector's method for creating the call
+        let jsonResponse = await getJSONDataFromAPI(this.rootUrl);
+        return jsonResponse;
     }
 }
 
+
+
+/**
+ * The OCL Connector
+ */
 export class OclConnector extends Connector {
 
     constructor(sourceObj, sourceConfigObj) {
@@ -56,21 +62,16 @@ export class OclConnector extends Connector {
         this.ownerTypeStem = "orgs";
     }
 
-    //.. Todo, make metadatasets set by Reducer changes so that they can be called when APi returns inSource
-
-    /* Metadatasets may already be set if we aren't auto populating, otherwise
-    retrieve them from the connector */
     async getMetadataSets() {
         if (!this.doAutopopulateMetadataSets)
             return this.metadataSets;
-
+        console.log(this.rootUrl);
         let url = this.getCollectionsQuery();
         let jsonResponse = await getJSONDataFromAPI(url); //.. Better to use promises so that the next one can be executed while we wait
         return jsonResponse;
     }
 
     async getSearchResults(metadataSet) {
-        console.log(metadataSet);
         let url = metadataSet.attributes.url;
         switch (metadataSet.id) {
             case 'referenceIndicators':
@@ -80,7 +81,16 @@ export class OclConnector extends Connector {
                 url = url + "concepts/?verbose=true&conceptClass=\"Data+Element\"&limit=10&page=1";
                 break;
         }
-        return getJSONDataFromAPI(url);
+        // todo: now we are expecting that JSONData is in fact array of json objects
+        let response = await getJSONDataFromAPI(url);
+        let searchResults = [];
+
+        for (let i = 0; i < response.length; i++) {
+            let resource = new oclSearchResult(response[i], metadataSet.id + i);
+            searchResults.push(resource);
+        }
+
+        return searchResults;
     }
 
 
@@ -88,22 +98,42 @@ export class OclConnector extends Connector {
     prepareSourcesQuery() {
         if (this.rootUrl == null || this.ownerTypeStem == null || this.ownerId == null)
             throw new Error("One attribute is unspecified: Root url is" + this.rootUrl + "ownerTypeStem is " + this.ownerTypeStem + " ownerId is " + this.ownerId);
-        return this.rootUrl + "/" + this.ownerTypeStem + "/" + this.ownerId + "/sources?limit=0";
+        return this.rootUrl + "/" + this.ownerTypeStem + "/" + this.ownerId + "/sources/?limit=0/";
     }
 
     getCollectionsQuery() {
         if (this.rootUrl == null || this.ownerTypeStem == null || this.ownerId == null)
             throw new Error("One attribute is unspecified: Root url is" + this.rootUrl + "   ownerTypeStem is " + this.ownerTypeStem + "   ownerId is " + this.ownerId);
 
-        return this.rootUrl + "/" + this.ownerTypeStem + "/" + this.ownerId + "/collections?limit=0";
+        return this.rootUrl + "/" + this.ownerTypeStem + "/" + this.ownerId + "/collections/?limit=0";
     }
-
 }
 
 
-//.. Connector is different for each, varying depending on how API queries are structured
-//.. Connector sits between interface and connector and may have different abstractions
-//.. createSource adapts to specifications in sourceObj and sourceConfigObj
+
+
+export class FhirConnector extends Connector {
+
+    constructor(sourceObj, sourceConfigObj) {
+        super(sourceObj, sourceConfigObj);
+    }
+
+    async getSearchResults(metadataSet) {
+        let url = metadataSet.attributes.exampleSearchRequest;
+        let results = await getJSONDataFromAPI(url);
+
+        let searchResults = [];
+        for (let i = 0; i < results.entry.length; i++) {
+            let resource = new fhirSearchResult(results.entry[i], metadataSet.id + i);
+            searchResults.push(resource);
+        }
+
+        return searchResults;
+    }
+}
+
+
+
 
 export function createConnector(sourceObj, sourceConfigObj) {
     let connector = new Connector(sourceObj, sourceConfigObj);
@@ -111,10 +141,9 @@ export function createConnector(sourceObj, sourceConfigObj) {
     switch (sourceObj.sourceProfile) {
         case 'ocl':
             connector = new OclConnector(sourceObj, sourceConfigObj);
-            connector.getMetadataSets();
             break;
         case 'fhir':
-            //.. Todo: implement
+            connector = new FhirConnector(sourceObj, sourceConfigObj);
             break;
         case 'pepfar':
             //.. Todo: implement
@@ -125,6 +154,5 @@ export function createConnector(sourceObj, sourceConfigObj) {
             break
     }
 
-    console.log(connector);
     return connector;
 }

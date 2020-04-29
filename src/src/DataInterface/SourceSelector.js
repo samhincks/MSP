@@ -1,27 +1,30 @@
 /*
-MetadatasetSelector includes both a source selector and metadataset selector, depending
-on the value
+--------------------------------------------------------------------------------
+4/27/2020
+The Source Selector Component lets users chose between different Sources and Metadatasets.
+Metadatasets are retrieved by a call to the connector which may populate the
+global metadataSets array from what is stored in domainConfig or via an API call.
 
-- Some code is refactored from Shortcut
+The component's views update when sources or metadataSets change value which they 
+may be do by the selection enabled by the component itself, but also by a change in
+Domain as specified in Header.js 
+
+Source Selector is also hooked to a change in Source which also occurs when the component
+mounts with the useEffect() convention. 
+--------------------------------------------------------------------------------
 */
-import React, { useState, useEffect, Fragment } from 'react';
-import domainConfig from '../domainConfig.json';
+import React, { useEffect } from 'react';
+import styled from 'styled-components';
+
 import { makeStyles } from '@material-ui/core/styles';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
-
-import styled from 'styled-components';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faRibbon } from '@fortawesome/free-solid-svg-icons'
 import LocalOfferOutlinedIcon from '@material-ui/icons/LocalOfferOutlined';
 import { useStateValue } from "../ContextSetup";
-import { queryMetadataSet, OCLConnector } from "../Connector/apiQueries";
-
-
 
 const useStyles = makeStyles(theme => ({
     container: {
@@ -64,18 +67,14 @@ const SelectContainer = styled.div`
 `
 
 export default function SourceSelector() {
-    //const [source, setSource] = useState(domainConfig.domains[0]); //.. default value is the selected domain as chosen in Header.js's sources[0].metadataSets
-    //.. if we have a context and update one thing, then it updates everything
 
     const classes = useStyles();
-
-    const [{ domain, sources, source, connector, metadataSets }, dispatch] = useStateValue();
+    const [{ sources, source, connector, metadataSets }, dispatch] = useStateValue();
 
     // Hook tied to changes in connector and domain
     useEffect(() => {
         async function updateMetadatasets() {
             const metadataSets = await connector.getMetadataSets();
-
             dispatch({
                 type: 'changeMetadataSets',
                 metadataSets: metadataSets
@@ -93,7 +92,6 @@ export default function SourceSelector() {
         })
     }
 
-
     //.. the component to update when metadataSets is changed (which it is when the async call is returned in Header.js in updateMetadatasets).
     const updateMetadataset = (metadataSet) => {
         dispatch({
@@ -102,10 +100,6 @@ export default function SourceSelector() {
         })
     }
 
-    //.. Create React component to be placed in relevant area in Domain (which has code sucked out from Indicator.js)
-    //.. Todo: add FontAwesomeIcon
-    //.. Todo, make metadatasets set by Reducer changes so that they can be called when APi returns inSource
-    console.log(sources);
     return (
         <div className={classes.container}>
             <Paper className={classes.sidebar}>
@@ -128,7 +122,7 @@ export default function SourceSelector() {
                                     onClick={() => updateMetadataset(metadataSet)}
                                     color="primary"
                                     className={classes.shortcutButton}>
-                                    <LocalOfferOutlinedIcon style={{ color: '#1D5893', marginRight: '5px' }} />  {metadataSet.title}
+                                    <LocalOfferOutlinedIcon style={{ color: '#1D5893', marginRight: '5px' }} />  {metadataSet.title || metadataSet.name}
                                 </Button>
 
                             )}

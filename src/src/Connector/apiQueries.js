@@ -34,19 +34,18 @@ export const getJSONDataFromAPI = async (url) => {
             );
         }
 
-        //.. fix the fact that it doesn't recognize response.json()
         console.log("the response is", response);
 
         const jsonData = await response.json(); //.. response[0]
         console.log("returned", jsonData);
-
-        if (!jsonData.length || jsonData.length === 0) {
-            console.log("jsonData is empty");
-            //setIndGroupLoading(false);
-            throw new Error(
-                `Warning data is empty from source `
-            );
-        }
+        /*
+                if (!jsonData.length || jsonData.length === 0) {
+                    console.log("jsonData is empty");
+                    //setIndGroupLoading(false);
+                    throw new Error(
+                        `Warning data is empty from source `
+                    );
+                }*/
         return jsonData;
 
     } catch (e) {
