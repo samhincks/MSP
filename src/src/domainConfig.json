@@ -1,0 +1,154 @@
+{
+    "domains": [
+        {
+            "id": "pepfar_msp",
+            "title": "PEPFAR MSP",
+            "name": "PEPFAR Metadata Sharing Platform",
+            "description": "The U.S. President’s Emergency Plan for AIDS Relief (PEPFAR) works to accelerate progress toward achieving HIV/AIDS epidemic control in more than 50 countries around the world.",
+            "logo": "https://www.icfcreative.com/2019/datim/images/logo.png",
+            "backgroundImage": "url(./assets/GettyImages_homepage.png)",
+            "initialAction": "loadLandingPage('pepfar-msp-landing-page')",
+            "attributes": {},
+            "sources": [
+                {
+                    "id": "mer",
+                    "sourceProfile": "ocl",
+                    "title": "DATIM MER",
+                    "name": "DATIM Monitoring, Evaluation and Results Indicators",
+                    "description": "Authoritative reference of PEPFAR indicator definitions and related metadata",
+                    "initialAction": "loadMetadataset('reference-indicators')",
+                    "attributes": {},
+                    "doAutopopulateMetadataSets": false,
+                    "connector": {
+                        "id": "OclConnector",
+                        "rootUrl": "https://api.staging.openconceptlab.org",
+                        "authenticationMethod": "None"
+                    },
+                    "metadataSets": [
+                        {
+                            "id": "referenceIndicators",
+                            "title": "Reference Indicators",
+                            "name": "PEPFAR MER Reference Indicators",
+                            "description": "Registry of PEPFAR MER reference indicators covering FY16-20",
+                            "initialAction": "fetchSearchResults",
+                            "attributes": {
+                                "url": "https://api.staging.openconceptlab.org/orgs/PEPFAR-Test7/sources/MER/",
+                                "owner_type": "Organization",
+                                "owner_id": "PEPFAR-Test7"
+                            }
+                        },
+                        {
+                            "id": "dataElements",
+                            "title": "Data Elements",
+                            "name": "MER Data Elements",
+                            "description": "Registry of data elements reported by countries",
+                            "initialAction": "fetchSearchResults",
+                            "attributes": {
+                                "url": "https://api.staging.openconceptlab.org/orgs/PEPFAR-Test7/sources/MER/",
+                                "owner_type": "Organization",
+                                "owner_id": "PEPFAR-Test7"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "kitchen_sink",
+            "title": "Kitchen Sink",
+            "name": "Kitchen Sink Demo Domain",
+            "description": "Demonstration of all connector types supported by the OCL Metadata Browser",
+            "logo": "",
+            "backgroundImage": "",
+            "initialAction": "loadLandingPage('pepfar-msp-landing-page')",
+            "attributes": {},
+            "sources": [
+                {
+                    "id": "test.ohie.datim.org/hapi-fhir-jpaserver",
+                    "sourceProfile": "fhir",
+                    "title": "test.ohie.datim.org/hapi-fhir-jpaserver",
+                    "name": "Test FHIR server for DATIM",
+                    "description": "Test FHIR server for DATIM",
+                    "initialAction": "loadMetadataset()",
+                    "doAutopopulateMetadataSets": false,
+                    "connector": {
+                        "id": "FhirConnector",
+                        "rootUrl": "https://test.ohie.datim.org/hapi-fhir-jpaserver/fhir",
+                        "authenticationMethod": "None"
+                    },
+                    "attributes": {},
+                    "metadataSets": [
+                        {
+                            "id": "Questionnaire",
+                            "title": "Questionnaire",
+                            "name": "FHIR Questionnaires",
+                            "description": "FHIR Questionnaires",
+                            "attributes": {
+                                "exampleSearchRequest": "https://test.ohie.datim.org/hapi-fhir-jpaserver/fhir/Questionnaire/",
+                                "exampleDetailsRequest": "https://test.ohie.datim.org/hapi-fhir-jpaserver/fhir/Questionnaire/?url=http://datim.org/fhir/Questionnaire/PLM-HIV-Questionnaire"
+                            }
+                        },
+                        {
+                            "id": "ValueSet",
+                            "title": "ValueSet",
+                            "name": "FHIR Value Sets",
+                            "description": "FHIR Value Sets",
+                            "initialAction": "fetchSearchResults",
+                            "attributes": {
+                                "exampleSearchRequest": "https://test.ohie.datim.org/hapi-fhir-jpaserver/fhir/ValueSet/",
+                                "exampleDetailsRequest": "https://test.ohie.datim.org/hapi-fhir-jpaserver/fhir/ValueSet/?url=http://hl7.org/fhir/ValueSet/administrative-gender"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": "pepfarQmap",
+                    "sourceProfile": "pepfarQmap",
+                    "title": "PEPFAR QMAP",
+                    "name": "PEPFAR Questionnaire Mapping",
+                    "description": "PEPFAR Questionnaire Mapping",
+                    "initialAction": "loadMetadataset()",
+                    "doAutopopulateMetadataSets": true,
+                    "connector": {
+                        "id": "PepfarQmapConnector",
+                        "rootUrl": "https://test.ohie.datim.org:5000/plm-qmap/",
+                        "authenticationMethod": "None"
+                    },
+                    "attributes": {
+                        "domain": "mAtches3"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "ciel",
+            "title": "CIEL",
+            "name": "Columbia International eHealth Laboratory Interface Terminology and Value Sets",
+            "description": "Interface terminology",
+            "logo": "",
+            "backgroundImage": "",
+            "initialAction": "loadSource('ciel')",
+            "attributes": {},
+            "sources": [
+                {
+                    "id": "ciel",
+                    "sourceProfile": "ocl",
+                    "title": "CIEL",
+                    "name": "Columbia International eHealth Laboratory Interface Terminology and Value Sets",
+                    "description": "",
+                    "initialAction": "loadMetadataset()",
+                    "doAutopopulateMetadataSets": true,
+                    "connector": {
+                        "id": "OclConnector",
+                        "rootUrl": "https://api.staging.openconceptlab.org",
+                        "authenticationMethod": "None"
+                    },
+                    "attributes": {
+                        "owner_type": "Organization",
+                        "owner_id": "CIEL"
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,39 @@
+{
+    "sourceProfiles": [
+        {
+            "id": "ocl",
+            "canAutopopulateMetadatasets": true,
+            "connectorClass": "OclConnector"
+        },
+        {
+            "id": "dhis2",
+            "canAutopopulateMetadatasets": true,
+            "connectorClass": "Dhis2Connector"
+        },
+        {
+            "id": "openmrs",
+            "canAutopopulateMetadatasets": false,
+            "connectorClass": "OpenmrsConnector"
+        },
+        {
+            "id": "fhir",
+            "canAutopopulateMetadatasets": true,
+            "connectorClass": "FhirConnector"
+        },
+        {
+            "id": "pepfarImap",
+            "canAutopopulateMetadatasets": true,
+            "connectorClass": "GenericConnector"
+        },
+        {
+            "id": "pepfarMoh",
+            "canAutopopulateMetadatasets": true,
+            "connectorClass": "GenericConnector"
+        },
+        {
+            "id": "pepfarQmap",
+            "canAutopopulateMetadatasets": true,
+            "connectorClass": "GenericConnector"
+        }
+    ]
+}
