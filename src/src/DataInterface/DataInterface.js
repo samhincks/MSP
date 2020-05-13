@@ -5,8 +5,14 @@ TODO:
 */
 import React, { Fragment } from 'react';
 import { makeStyles } from "@material-ui/core/styles";
+import { useStateValue } from '../ContextSetup';
 import SourceSelector from './SourceSelector';
 import MetaDataView from './MetaDataView';
+import PepfarDataView from './PepfarDataView';
+import PepfarFilterPanel from './PepfarFilterPanel';
+//import PepfarDetailsView from './PepfarDetailsView';
+import Grid from '@material-ui/core/Grid';
+import PepfarSearchBar from './PepfarSearchBar';
 
 const useStyles = makeStyles(theme => ({
     container: {
@@ -20,6 +26,10 @@ const useStyles = makeStyles(theme => ({
 
 export default function DataInterface() {
     const classes = useStyles();
+    const [{ domain, source }, dispatch] = useStateValue();
+    //.. Todo: use customPepfarComopnents should be in domain config
+
+    //.. There will be standard component that can display everything, some stuff has custom coponent
 
     return (
         <Fragment>
@@ -27,8 +37,13 @@ export default function DataInterface() {
                 <SourceSelector />
             </div>
 
-            <MetaDataView />
-
+            <Grid container>
+                {source.useCustomComponents && <PepfarSearchBar /> /*todo: PepfarSearchBar is specified in DomainConfig */}
+                {source.useCustomComponents && <PepfarFilterPanel />}
+                {source.useCustomComponents && <PepfarDataView />}
+                {/*useCustomPepfarComponents && <PepfarDetailsView />*/}
+                {!source.useCustomComponents && <MetaDataView />}
+            </Grid>
         </Fragment>
     )
 }

@@ -72,7 +72,15 @@ export class OclConnector extends Connector {
     }
 
     async getSearchResults(metadataSet) {
-        let url = metadataSet.attributes.url;
+        let url;
+        if (this.doAutopopulateMetadataSets) {
+            /* GET #{api-root-url}#{metadataset-relative-url}/concepts/ */
+            url = this.rootUrl + metadataSet.url + "/concepts/";
+            console.log(url);
+        }
+        else
+            url = metadataSet.attributes.url;
+
         switch (metadataSet.id) {
             case 'referenceIndicators':
                 url = url + "/concepts/?verbose=true&limit=0&conceptClass=\"Reference+Indicator\"";
@@ -80,6 +88,7 @@ export class OclConnector extends Connector {
             case 'dataElements':
                 url = url + "concepts/?verbose=true&conceptClass=\"Data+Element\"&limit=10&page=1";
                 break;
+
         }
         // todo: now we are expecting that JSONData is in fact array of json objects
         let response = await getJSONDataFromAPI(url);
@@ -107,6 +116,8 @@ export class OclConnector extends Connector {
 
         return this.rootUrl + "/" + this.ownerTypeStem + "/" + this.ownerId + "/collections/?limit=0";
     }
+
+
 }
 
 

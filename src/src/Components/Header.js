@@ -61,7 +61,7 @@ export default function Header() {
           <Grid item xs={10}>
             <Title className={classes.title}>
               <a href="/">
-                <img src={logoUrl} className={classes.logo} alt="DATIM logo" />
+                <img src={logoUrl} className={classes.logo} alt="" />
               </a>
             </Title>
           </Grid>

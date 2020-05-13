@@ -19,6 +19,7 @@
                     "initialAction": "loadMetadataset('reference-indicators')",
                     "attributes": {},
                     "doAutopopulateMetadataSets": false,
+                    "useCustomComponents": true,
                     "connector": {
                         "id": "OclConnector",
                         "rootUrl": "https://api.staging.openconceptlab.org",

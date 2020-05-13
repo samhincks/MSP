@@ -75,6 +75,7 @@ export default function SourceSelector() {
     useEffect(() => {
         async function updateMetadatasets() {
             const metadataSets = await connector.getMetadataSets();
+            console.log(metadataSets);
             dispatch({
                 type: 'changeMetadataSets',
                 metadataSets: metadataSets
@@ -105,7 +106,7 @@ export default function SourceSelector() {
             <Paper className={classes.sidebar}>
                 <Grid container>
                     <Grid item xs={12} md={12}  >
-                        {sources.length > 0 &&
+                        {sources.length > 1 &&
                             <SelectContainer>
                                 <Select value={source} onChange={(e) => updateSource(e.target.value)} labelId="label" id="select">
                                     {sources.map(source =>

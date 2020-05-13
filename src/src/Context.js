@@ -23,6 +23,16 @@ else {
   connector = createConnector(initSourceOfDomain, sourceConfigObj);
 }
 
+// todo: put this in domainConfig and decide if you then want options there as well
+let initialFilterValues = {
+  fiscal: "All",
+  type: "All",
+  dataSet: "All",
+  source: "MER",
+  frequency: "All",
+  indicator: "All"
+}
+
 //.. TODO make default be specified by the ID
 
 export const initialState = {
@@ -37,6 +47,17 @@ export const initialState = {
   metadataSet: initMetadataSet, // the currently selected metadataSet
   connector: connector, // a connector corresponding to a source
   searchResults: null, // searchResults for a metadataset as retrieved with API request
+  dataElements: [], //.. same as searchResults in vocabulary of PepfarDataView, todo: reconcile
+  filterValues: initialFilterValues,
+  selectedDataElement: [],
+  dataElementDetail: {},
+  detailPanel: {
+    top: false,
+    left: false,
+    bottom: false,
+    right: false,
+  },
+  search: "",
   password: '',
   indicatorName: '',
   currentIndicator: [],

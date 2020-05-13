@@ -73,11 +73,47 @@ export const reducer = (state, action) => {
         searchResults: action.searchResults
       }
 
+    case 'setDataElements':
+      return {
+        ...state,
+        dataElements: action.dataElements,
+      }
+
+    case 'setSelectedDataElement':
+      return {
+        ...state,
+        selectedDataElement: action.selectedDataElement,
+      }
+
+    case 'setSearch':
+      return {
+        ...state,
+        search: action.search,
+      }
+
+    case 'setDataElementDetail':
+      return {
+        ...state,
+        dataElementDetail: action.dataElementDetail,
+      }
+
+    case 'setDetailPanel':
+      return {
+        ...state,
+        detailPanel: action.detailPanel,
+      }
 
     case 'setFilteredData':
       return {
         ...state,
         filtered: action.filtered
+      }
+
+
+    case 'changeFilterValues':
+      return {
+        ...state,
+        filterValues: action.filterValues
       }
 
     default:
