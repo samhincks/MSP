@@ -12,12 +12,8 @@ import NotFound from './AppShell/NotFound';
 import ReferenceIndicator from './AppShell/ReferenceIndicator';
 import Indicators from './AppShell/Indicators';
 import Compare from './AppShell/Compare';
-<<<<<<< HEAD
-import { StateProvider } from './ContextSetup';
-=======
 import CompareIndicators from './AppShell/CompareIndicators';
-import {StateProvider} from './ContextSetup';
->>>>>>> upstream/master
+import { StateProvider } from './ContextSetup';
 
 import clsx from 'clsx';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
@@ -25,6 +21,7 @@ import Drawer from '@material-ui/core/Drawer';
 
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
+import DataInterface from './DataInterface/DataInterface';
 
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
@@ -33,7 +30,6 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import history from './history';
 import { initialState } from './Context';
 import { reducer } from './Reducer';
-import DataInterface from './DataInterface/DataInterface';
 
 const drawerWidth = 300;
 
@@ -158,58 +154,29 @@ export default function App() {
               [classes.contentShift]: open,
             })}
           >
-            <div className={classes.topBar} />
-            <Toolbar>
-              <IconButton
-                color="inherit"
-                aria-label="open drawer"
-                onClick={handleDrawerOpen}
-                edge="start"
-                className={clsx(classes.menuButton, open && classes.hide)}
-              >
-                {/* <MenuIcon /> */}
-              </IconButton>
-              <Header />
-            </Toolbar>
-          </AppBar>
-          <Router history={history}>
-            <Drawer className={classes.drawer} variant="persistent" anchor="left" open={open}
-              classes={{
-                paper: classes.drawerPaper,
-              }}
-            >
-              <div className={classes.drawerHeader}>
-                <IconButton onClick={handleDrawerClose}>
-                  {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
-                </IconButton>
-              </div>
-              <Sidebar />
-            </Drawer>
-            <main
-              className={clsx(classes.content, {
-                [classes.contentShift]: open,
-              })}
-            >
-              <div className={classes.drawerHeader} />
-              <Switch>
-                <Redirect from="/home" to="/" />
-                <Route exact path="/" component={Welcome} />
-                <Route path="/codelist" component={Codelist} />
-                <Route path="/referenceIndicator" component={ReferenceIndicator} />
-                <Route path="/datainterface" component={DataInterface} />
-                <Route path="/indicators" component={Indicators} />
-                <Route path="/codelist/indicator" component={ReferenceIndicator} />
-                <Route path="/about" component={About} />
-                <Route exact path="/index.html" component={Welcome} />
-                <Route path="/referenceIndicator/:id" component={ReferenceIndicator} />
-                <Route path="/compare" component={Compare} />
-                <Route path="/compareIndicators" component={CompareIndicators} />
-                <Route component={NotFound} />
-              </Switch>
-            </main>
-          </Router>
-        </div>
-        <Footer></Footer>
+            <div className={classes.drawerHeader} />
+            <Switch>
+              <Redirect from="/home" to="/" />
+              <Route exact path="/" component={Welcome} />
+              <Route path="/codelist" component={Codelist} />
+              <Route path="/referenceIndicator" component={ReferenceIndicator} />
+              <Route path="/indicators" component={Indicators} />
+              <Route path="/codelist/indicator" component={ReferenceIndicator} />
+              <Route path="/datainterface" component={DataInterface} />
+              <Route path="/about" component={About} />
+              <Route exact path="/index.html" component={Welcome} />
+              <Route path="/referenceIndicator/:id" component={ReferenceIndicator} />
+              <Route path="/compare" component={Compare} />
+              <Route path="/compareIndicators" component={CompareIndicators} />
+              <Route component={NotFound} />
+            </Switch>
+          </main>
+        </Router>
+      </div>
+      <Footer></Footer>
     </StateProvider>
   );
 }
+
+
+
