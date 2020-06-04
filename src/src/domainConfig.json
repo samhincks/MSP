@@ -20,6 +20,11 @@
                     "attributes": {},
                     "doAutopopulateMetadataSets": false,
                     "useCustomComponents": true,
+                    "components": {
+                        "view": "PepfarDataView",
+                        "details": "PepfarDetailsView",
+                        "filter": "PepfarFilterPanel"
+                    },
                     "connector": {
                         "id": "OclConnector",
                         "rootUrl": "https://api.staging.openconceptlab.org",
@@ -139,6 +144,10 @@
                     "description": "",
                     "initialAction": "loadMetadataset()",
                     "doAutopopulateMetadataSets": true,
+                    "excludeMetadataSets": [
+                        "/orgs/CIEL/sources/SNOMED-UK/",
+                        "/orgs/CIEL/sources/SNOMED-MVP/"
+                    ],
                     "connector": {
                         "id": "OclConnector",
                         "rootUrl": "https://api.staging.openconceptlab.org",
@@ -148,6 +157,85 @@
                         "owner_type": "Organization",
                         "owner_id": "CIEL"
                     }
+                }
+            ]
+        },
+        {
+            "id": "rainbow",
+            "title": "Rainbow",
+            "name": "Rainbow",
+            "sources": [
+                {
+                    "id": "moh",
+                    "sourceProfile": "moh",
+                    "title": "",
+                    "doAutopopulateMetadataSets": false,
+                    "metadataSets": [
+                        {
+                            "id": "moh-alignment-fy18",
+                            "title": "FY18 MOH Alignment Codelist",
+                            "name": "FY18 MOH Alignment Codelist",
+                            "description": "FY18 MOH Alignment Codelist",
+                            "disableDetailsQuery": true,
+                            "attributes": {
+                                "period": "FY18",
+                                "url": "https://test.ohie.datim.org:5000/ocl-etl/moh/FY18/"
+                            }
+                        },
+                        {
+                            "id": "moh-alignment-fy19",
+                            "title": "FY19 MOH Alignment Codelist",
+                            "name": "FY19 MOH Alignment Codelist",
+                            "description": "FY19 MOH Alignment Codelist",
+                            "disableDetailsQuery": true,
+                            "attributes": {
+                                "period": "FY19",
+                                "url": "https://test.ohie.datim.org:5000/ocl-etl/moh/FY19/"
+                            }
+                        }
+                    ],
+                    "connector": {
+                        "id": "RainbowConnector",
+                        "rootUrl": "",
+                        "authenticationMethod": "None"
+                    },
+                    "attributes": {}
+                },
+                {
+                    "id": "imap",
+                    "sourceProfile": "imap",
+                    "title": "",
+                    "doAutopopulateMetadataSets": true,
+                    "connector": {
+                        "id": "RainbowConnector",
+                        "rootUrl": "https://ohie.datim.org/ocl-imap/",
+                        "authenticationMethod": "None"
+                    },
+                    "attributes": {}
+                },
+                {
+                    "id": "qmap",
+                    "sourceProfile": "qmap",
+                    "title": "",
+                    "doAutopopulateMetadataSets": true,
+                    "connector": {
+                        "id": "RainbowConnector",
+                        "rootUrl": "",
+                        "authenticationMethod": "None"
+                    },
+                    "attributes": {}
+                },
+                {
+                    "id": "mer",
+                    "sourceProfile": "mer",
+                    "title": "",
+                    "doAutopopulateMetadataSets": true,
+                    "connector": {
+                        "id": "RainbowConnector",
+                        "rootUrl": "",
+                        "authenticationMethod": "None"
+                    },
+                    "attributes": {}
                 }
             ]
         }

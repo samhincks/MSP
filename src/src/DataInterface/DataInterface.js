@@ -9,10 +9,13 @@ import { useStateValue } from '../ContextSetup';
 import SourceSelector from './SourceSelector';
 import MetaDataView from './MetaDataView';
 import PepfarDataView from './PepfarDataView';
+import DetailsView from './DetailsView';
 import PepfarFilterPanel from './PepfarFilterPanel';
+import GenericFilter from './GenericFilter';
 //import PepfarDetailsView from './PepfarDetailsView';
 import Grid from '@material-ui/core/Grid';
-import PepfarSearchBar from './PepfarSearchBar';
+import SearchBar from './SearchBar';
+import styled from 'styled-components'
 
 const useStyles = makeStyles(theme => ({
     container: {
@@ -23,27 +26,85 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
+const FilterArea = styled.div`
+width: 700px;
+height: 400px;
+border-radius: 3px;
+padding: 5px;
+`
+const DetailsArea = styled.div`
+    width: 700px;
+    height: 800px;
+    border-radius: 3px;
+    padding: 5px;
+`
+
+const LeftArea = styled.div`
+    display:grid;
+    justify-content:flex-start;
+    flex-direction: column;
+`
+
+const DataInterfaceContainer = styled.div`
+    display:flex;
+`
+
 
 export default function DataInterface() {
     const classes = useStyles();
     const [{ domain, source }, dispatch] = useStateValue();
-    //.. Todo: use customPepfarComopnents should be in domain config
 
-    //.. There will be standard component that can display everything, some stuff has custom coponent
-
+    /*
+    //.. to do: figure out how to render a copmonent from a string. React.createElement()
+    https://reactjs.org/docs/jsx-in-depth.html#choosing-the-type-at-runtime */
+    /*
+    const FilterPanel = source.components.filter || null;
+    const DataView = source.components.view || MetaDataView;
+    const DetailsView = source.components.details || null;
+    console.log(FilterPanel, DataView, DetailsView);
+    */
     return (
-        <Fragment>
-            <div className={classes.container}>
-                <SourceSelector />
-            </div>
+        <DataInterfaceContainer>
+            {source.useCustomComponents && <PepfarFilterPanel />}
 
-            <Grid container>
-                {source.useCustomComponents && <PepfarSearchBar /> /*todo: PepfarSearchBar is specified in DomainConfig */}
-                {source.useCustomComponents && <PepfarFilterPanel />}
-                {source.useCustomComponents && <PepfarDataView />}
-                {/*useCustomPepfarComponents && <PepfarDetailsView />*/}
-                {!source.useCustomComponents && <MetaDataView />}
-            </Grid>
-        </Fragment>
+            <LeftArea>
+                <SourceSelector />
+                <FilterArea>
+                    <Grid container>
+                        <GenericFilter />
+                    </Grid>
+                </FilterArea>
+
+                <DetailsArea>
+                    <DetailsView />
+                </DetailsArea>
+            </LeftArea>
+            <DataArea useCustomComponents={source && source.useCustomComponents} />
+        </DataInterfaceContainer>
     )
+}
+
+
+const DataAreaContainer = styled.div`
+    display: flex;
+    align-items: left; 
+    flex-direction: column;
+    padding-bottom:100px;
+    /*background-color: lightblue;*/
+    width:100%
+`
+
+function DataArea(props) {
+    const classes = useStyles();
+    return (
+        <DataAreaContainer>
+            {<SearchBar /> /*todo: PepfarSearchBar is specified in DomainConfig */}
+            {/*DataView && React.createElement(DataView)*/}
+            {props.useCustomComponents && <PepfarDataView />}
+            {/*source.useCustomPepfarComponents && <PepfarDetailsView />*/}
+            {!props.useCustomComponents && <MetaDataView />}
+
+        </DataAreaContainer>
+    )
+
 }

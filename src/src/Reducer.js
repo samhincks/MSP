@@ -1,4 +1,6 @@
-import { Connector, createConnector } from "./Connector/Connector.js"
+import { Connector, createConnector } from "./Connector/Connector.js";
+import sourceConfig from "./sourceConfig.json";
+import filterConfig from "./filterConfig.json";
 
 
 export const reducer = (state, action) => {
@@ -33,20 +35,21 @@ export const reducer = (state, action) => {
         domain: action.domain,
         sources: action.domain.sources,
         source: action.domain.sources[0],
-        connector: createConnector(action.domain.sources[0])
+        connector: createConnector(action.domain.sources[0], sourceConfig, filterConfig)
       }
+
 
     case 'changeSources':
       return {
         ...state,
         sources: action.sources,
-        connector: createConnector(action.sources[0])
+        connector: createConnector(action.sources[0], sourceConfig)
       }
 
     case 'changeSource':
       return {
         ...state,
-        connector: createConnector(action.source),
+        connector: createConnector(action.source, sourceConfig),
         source: action.source
         // metadataSets: action.source.metadataSets,
         // metadataSet: action.source.metadataSets[0]
@@ -66,23 +69,16 @@ export const reducer = (state, action) => {
         metadataSet: action.metadataSet
       }
 
-
     case 'changeSearchResults':
       return {
         ...state,
-        searchResults: action.searchResults
+        searchResults: action.searchResults,
       }
 
-    case 'setDataElements':
+    case 'setDetails':
       return {
         ...state,
-        dataElements: action.dataElements,
-      }
-
-    case 'setSelectedDataElement':
-      return {
-        ...state,
-        selectedDataElement: action.selectedDataElement,
+        details: action.details,
       }
 
     case 'setSearch':
@@ -91,11 +87,26 @@ export const reducer = (state, action) => {
         search: action.search,
       }
 
-    case 'setDataElementDetail':
+    case 'setLimit':
       return {
         ...state,
-        dataElementDetail: action.dataElementDetail,
+        limit: action.limit
       }
+
+    case 'setPageNum':
+      return {
+        ...state,
+        pageNum: action.pageNum
+      }
+
+
+    /* For custom Pepfar components */
+    case 'setDataElements':
+      return {
+        ...state,
+        dataElements: action.dataElements,
+      }
+
 
     case 'setDetailPanel':
       return {
@@ -103,18 +114,33 @@ export const reducer = (state, action) => {
         detailPanel: action.detailPanel,
       }
 
+
+    case 'setSelectedDataElement':
+      return {
+        ...state,
+        selectedDataElement: action.selectedDataElement,
+      }
+
+    case 'setDataElementDetail':
+      return {
+        ...state,
+        dataElementDetail: action.dataElementDetail,
+      }
+
+
     case 'setFilteredData':
       return {
         ...state,
         filtered: action.filtered
       }
 
-
     case 'changeFilterValues':
       return {
         ...state,
         filterValues: action.filterValues
       }
+    /*  End custom components */
+
 
     default:
       return state;

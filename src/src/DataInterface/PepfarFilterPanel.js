@@ -12,10 +12,9 @@ Code begins on 1715 with
               <Paper className={classes.sidebar}>
 
 Before that, <Shortcut> does some stuff.. What does it do?
-
 */
-import React, { useState, useEffect } from 'react';
 
+import React, { useState, useEffect } from 'react';
 import Grid from '@material-ui/core/Grid';
 import { makeStyles } from '@material-ui/core/styles';
 import InputLabel from '@material-ui/core/InputLabel';
@@ -136,13 +135,14 @@ const useStyles = makeStyles(theme => ({
 export default function PepfarFilterPanel() {
     const classes = useStyles();
     const codeListMap = getCodeListMap();
+    console.log("%c codelist map", "color:green", codeListMap);
     const [indicatorsTemp, setIndicatorsTemp] = useState([""]);
 
     const [hiddenDataSet, setHiddenDataSet] = useState(true);
     const type = ["All", "Results", "Target"];
 
     const [{ filterValues, dataElements }, dispatch] = useStateValue();
-
+    console.log(filterValues);
     //initial filter state
     //.. todo: retire this code since we are now saving filter values with useStateValue
     const [values, setValues] = React.useState({

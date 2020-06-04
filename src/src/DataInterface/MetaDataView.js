@@ -1,7 +1,11 @@
-import React, { Fragment, useEffect } from 'react';
+import React, { useState, Fragment, useEffect } from 'react';
 import styled from 'styled-components'
 import { useStateValue } from '../ContextSetup';
 import Input from '@material-ui/core/Input';
+import CustomTable from './components/CustomTable';
+import TableRow from '@material-ui/core/TableRow';
+import TablePagination from '@material-ui/core/TablePagination';
+
 
 
 const DataSetsGrid = styled.div`
@@ -32,46 +36,123 @@ const SearchDataSets = () => {
         <Input onChange={(e) => updateDataSets(e)} />
     )
 }
+const SearchResultsContainer = styled.div`
+    
+`
 
 
 export default function MetaDataView() {
-    const [{ metadataSet, searchResults, connector, filtered }, dispatch] = useStateValue();
+    const [{ metadataSet, searchResults, connector, filterValues, limit, pageNum }, dispatch] = useStateValue();
+
+    async function updateSearchResults() {
+        if (metadataSet == null) return;
+        console.log("%c running with page", "color:brown", pageNum)
+        let params = {
+            filterValues: filterValues,
+            limit: limit,
+            pageNum: pageNum
+        }
+        const searchResults = await connector.getSearchResults(metadataSet, params);
+        //console.log("%c searchResults is ", "color:purple", searchResults)
+
+        dispatch({
+            type: 'changeSearchResults',
+            searchResults: searchResults
+        });
+    }
 
     // Hook tied to changes in domain, source, and metadataSet
     useEffect(() => {
-        async function updateSearchResults() {
-            if (metadataSet == null) return;
-            const searchResults = await connector.getSearchResults(metadataSet);
-
-            dispatch({
-                type: 'changeSearchResults',
-                searchResults: searchResults
-            })
-        }
-
         updateSearchResults()
-    }, [metadataSet]);
+    }, [metadataSet, limit, pageNum]);
+
 
     //.. todo implement serch
     //..let data = filtered ? filtered : connector && connector.jsonData;
     //let data = searchResults;
-
     return (
-        <Fragment>
-
+        <SearchResultsContainer>
             {/*connector && connector.jsonData &&
                 <SearchDataSets></SearchDataSets>*/
             }
+            {searchResults.names.length > 0 && <CustomTable
+                tableHeaderColor="warning"
+                tableHead={searchResults.names}
+                tableData={searchResults.entries} />}
 
-            <DataSetsGrid>
-                {searchResults && searchResults.map(resource =>
+            {/*<DataSetsGrid>
+                {searchResults.entries && searchResults.entries.map(resource =>
                     <MinimalDataSetView key={resource.id} resource={resource} />
                 )}
-            </DataSetsGrid>
+                </DataSetsGrid>*/}
+            <PageContainer></PageContainer>
 
-        </Fragment>
+        </SearchResultsContainer>
     )
 }
+
+const PageContainer = (props) => {
+    const [{ searchResults, connector, filterValues, pageNum, limit }, dispatch] = useStateValue();
+    let [rowsPerPage, setRowsPerPage] = useState(limit);
+    const [page, setPage] = useState(pageNum - 1);
+    let [count, setCountOfValues] = useState(searchResults.totalEntries || 0);
+
+    // When API call done elsewhere it resets the data models point of
+    // truth for what page we're on, this hook changes the GUI
+    useEffect(() => {
+        setPage(pageNum - 1);
+        //console.log("%c setting pagenum", "color:turquoise", pageNum)
+    }, [pageNum]);
+
+    useEffect(() => {
+        setCountOfValues(searchResults.totalEntries || 0);
+    }, [searchResults]);
+
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage);
+        dispatch({
+            type: "setPageNum",
+            pageNum: newPage + 1 // zero indexed in gui and 1 indexed in API
+        })
+    };
+
+    const handleChangeRowsPerPage = event => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        //.. note we will need to figure out a way to reset page to 0 when filter is registered
+        dispatch({
+            type: "setLimit",
+            limit: event.target.value
+        })
+        dispatch({
+            type: "setPageNum",
+            pageNum: 1
+        })
+        setPage(0);
+    };
+
+    return (
+        <table>
+            <tbody>
+                <TableRow>
+                    <TablePagination
+                        rowsPerPageOptions={[15, 25, 50, 100]}
+                        labelDisplayedRows={({ from, to, count }) => `Displaying rows ${from}-${to} of ${count}`}
+                        // page={0}
+                        // rowsPerPage={10}
+                        // count={100}
+                        // onChangePage={() => {}}
+                        count={count}
+                        rowsPerPage={rowsPerPage}
+                        page={page}
+                        onChangePage={handleChangePage}
+                        onChangeRowsPerPage={handleChangeRowsPerPage}
+                    />
+                </TableRow>
+            </tbody>
+        </table>)
+}
+
+
 
 const DataSetContainer = styled.div`
     min-width: 100px;
@@ -90,6 +171,7 @@ const MinimalDatasetContainer = styled.div`
     padding: 1%;
 `
 
+
 const DataSetView = (props) => {
     return (
         <DataSetContainer>
@@ -100,9 +182,19 @@ const DataSetView = (props) => {
 }
 
 const MinimalDataSetView = (props) => {
+    const [{ connector }, dispatch] = useStateValue();
+    // Function should make the details section appear by use of the selected data element global variable.
+    // It should call the connector which returns the selected Data Element. Then it should dispatch 
+    // a selection to selected data lement with the details 
+    async function handleDataViewClick() {
+        const details = await connector.getDetails();
+    }
+
     return (
-        <MinimalDatasetContainer>
-            <p>{props.resource.getTitle()}</p>
+        <MinimalDatasetContainer
+            onClick={handleDataViewClick}
+        >
+            <p>{props.resource.title}</p>
         </MinimalDatasetContainer>
     )
 }

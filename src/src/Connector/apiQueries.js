@@ -18,13 +18,16 @@ What’s the structure of metadata for each resource type in the metadata set?
 //.. Implementation questions:
 //... Should this be a class? Should we do a new class for MSP and OCL connector?
 
-export const getJSONDataFromAPI = async (url) => {
+export const getJSONDataFromAPI = async (url, options) => {
     try {
-        let options = {
-            method: 'GET',
-            mode: 'cors'
+        //.. todo: add faceted header search includeFacets: true
+        if (!options) {
+            options = {
+                method: 'GET',
+                mode: 'cors'
+            }
         }
-        console.log("running query " + url);
+        console.log("%c running query " + url, "color:orange");
         const response = await fetch(url, options);
 
         if (!response.ok) {
@@ -34,9 +37,23 @@ export const getJSONDataFromAPI = async (url) => {
             );
         }
 
-        console.log("the response is", response);
+        console.log("%c the response is", "color:orange", { response });
+        /* Extend so that it takes in headers for faceted serach
+        and includes headers for the response,
+        we want https://api.openconceptlab.org/orgs/CIEL/sources/CIEL/concepts/ 
+        numFound from the header. 
+        
+        */
+        let numFound = null;
+
+        /* Parse headers (for some reason, one cannot simply extract a given key)*/
+        for (let [key, value] of response.headers) {
+            //console.log(`${key} = ${value}`);
+            if (key === 'num_found') numFound = value;
+        }
 
         const jsonData = await response.json(); //.. response[0]
+        jsonData.numFound = numFound;
         console.log("returned", jsonData);
         /*
                 if (!jsonData.length || jsonData.length === 0) {
@@ -49,7 +66,6 @@ export const getJSONDataFromAPI = async (url) => {
         return jsonData;
 
     } catch (e) {
-
         throw new Error("error: " + e.message);
     }
 }

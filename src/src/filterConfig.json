@@ -1,0 +1,44 @@
+{
+    "metadataSets": [
+        {
+            "id": "COVID-19-Starter-Set",
+            "ignore": [
+                "retired",
+                "version"
+            ],
+            "attributes": [
+                {
+                    "id": "id",
+                    "name": "ID"
+                },
+                {
+                    "id": "display_name",
+                    "name": "Name",
+                    "detail": "title"
+                },
+                {
+                    "id": "concept_class",
+                    "urlId": "conceptClass",
+                    "name": "Concept Class",
+                    "options": [
+                        "Question",
+                        "Finding",
+                        "Diagnosis",
+                        "Test",
+                        "Misc"
+                    ],
+                    "detail": "emphasize"
+                },
+                {
+                    "id": "datatype",
+                    "name": "Data Type",
+                    "options": [
+                        "Coded",
+                        "N/A",
+                        "Numeric"
+                    ]
+                }
+            ]
+        }
+    ]
+}

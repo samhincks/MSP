@@ -3,7 +3,10 @@
         {
             "id": "ocl",
             "canAutopopulateMetadatasets": true,
-            "connectorClass": "OclConnector"
+            "connectorClass": "OclConnector",
+            "keys": {
+                "title": "display_name"
+            }
         },
         {
             "id": "dhis2",
@@ -18,20 +21,23 @@
         {
             "id": "fhir",
             "canAutopopulateMetadatasets": true,
-            "connectorClass": "FhirConnector"
+            "connectorClass": "FhirConnector",
+            "keys": {
+                "title": "resource.title"
+            }
         },
         {
-            "id": "pepfarImap",
+            "id": "imap",
             "canAutopopulateMetadatasets": true,
             "connectorClass": "GenericConnector"
         },
         {
-            "id": "pepfarMoh",
+            "id": "moh",
             "canAutopopulateMetadatasets": true,
             "connectorClass": "GenericConnector"
         },
         {
-            "id": "pepfarQmap",
+            "id": "qmap",
             "canAutopopulateMetadatasets": true,
             "connectorClass": "GenericConnector"
         }

@@ -47,7 +47,8 @@ export default function Header() {
   const logoUrl = domain.logo; //.. TODO: change this to the domain chosen in this file.
 
   const updateDomain = (domain) => {
-    console.log("updating domain");
+    console.log("updating domain to " + domain.id);
+    if (domain.id === "pepfar_msp") window.location.href = '/codelist';
     dispatch({
       type: 'changeDomain',
       domain: domain

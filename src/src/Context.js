@@ -1,37 +1,27 @@
 import domainConfig from "./domainConfig.json";
 import { Source, createConnector } from "./Connector/Connector.js"
 import sourceConfig from "./sourceConfig.json";
+import filterConfig from "./filterConfig.json";
 import SourceSelector from './DataInterface/SourceSelector.js';
 
 //.. Instantiate a Default Source for the Domain
-let initDomain = domainConfig.domains[0];
+let initDomain = domainConfig.domains[2];
 let initSources = initDomain.sources;
 let initSourceOfDomain = initSources[0];
 let initMetadataSets = null; //.. metadatasets are set with help of Source class because sometimes they autopopulate with API call
 let initMetadataSet = null;
 
-//.. ignore sourceConfigObj for now; incorporate later
-let sourceConfigObj = sourceConfig.sourceProfiles.find(obj => obj.id == initSourceOfDomain.sourceProfile);
-
-let connector;
-
-if (sourceConfigObj == null) {
-  connector = createConnector(initSourceOfDomain);
-  console.log("WARNING: connector " + initSourceOfDomain + " is not implemented in sourceconfig file");
-}
-else {
-  connector = createConnector(initSourceOfDomain, sourceConfigObj);
-}
+let connector = createConnector(initSourceOfDomain, sourceConfig, filterConfig);
 
 // todo: put this in domainConfig and decide if you then want options there as well
-let initialFilterValues = {
+/*let initialFilterValues = {
   fiscal: "All",
   type: "All",
   dataSet: "All",
   source: "MER",
   frequency: "All",
   indicator: "All"
-}
+}*/
 
 //.. TODO make default be specified by the ID
 
@@ -46,9 +36,14 @@ export const initialState = {
   metadataSets: initMetadataSets, // a set of metadatasets for a source as known from domain config or API request
   metadataSet: initMetadataSet, // the currently selected metadataSet
   connector: connector, // a connector corresponding to a source
-  searchResults: null, // searchResults for a metadataset as retrieved with API request
+  searchResults: {
+    entries: [],
+    names: []
+  }, // searchResults for a metadataset as retrieved with API request
   dataElements: [], //.. same as searchResults in vocabulary of PepfarDataView, todo: reconcile
-  filterValues: initialFilterValues,
+  filterValues: {},
+  limit: 25,
+  pageNum: 1,
   selectedDataElement: [],
   dataElementDetail: {},
   detailPanel: {
