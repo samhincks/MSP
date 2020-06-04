@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
-import * as headings from '../Styles/Text';
-
-import Breadcrumb from '../Components/Breadcrumb';
-
+/* eslint-disable */
 
 import Grid from '@material-ui/core/Grid';
 import { makeStyles } from '@material-ui/core/styles';
@@ -50,7 +46,6 @@ import MuiDialogActions from '@material-ui/core/DialogActions';
 import { withStyles } from '@material-ui/core/styles';
 import IconButton from '@material-ui/core/IconButton';
 import InputBase from '@material-ui/core/InputBase';
-import Chip from '@material-ui/core/Chip';
 import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
 import Tooltip from '@material-ui/core/Tooltip';
@@ -65,6 +60,8 @@ import history from './../history';
 import GetAppIcon from '@material-ui/icons/GetApp';
 import CompareArrowsIcon from '@material-ui/icons/CompareArrows';
 import styled from 'styled-components';
+import MenuItem from '@material-ui/core/MenuItem';
+import { TiArrowSortedDown } from 'react-icons/ti';
 
 //tab panel function
 function TabPanel(props) {
@@ -108,6 +105,12 @@ const ActionButtonLabel = styled.p`
     margin:0;
     padding:0;
     font-size: 0.9em;  
+    font-weight: bold;
+`;
+const ExportButtonLabel = styled.p`
+    margin:0;
+    padding:0;
+    font-size: 0.8em;  
     font-weight: bold;
 `;
 
@@ -173,8 +176,8 @@ const useStyles = makeStyles(theme => ({
 
   },
   popOver: {
-    padding: '20px',
-    minWidth: '200px'
+    padding: '20px'
+    // minWidth: '200px'
   },
   fieldset: {
     borderRadius: '25px',
@@ -248,7 +251,10 @@ const useStyles = makeStyles(theme => ({
     paddingBottom: '30px'
   },
   chip: {
-    marginRight: '5px'
+    marginTop: '5px',
+    color: '#333333',
+    /* backgroundColor: '#ffffff',*/
+    fontSize: '12px'
   },
   filterButton: {
     marginTop: '20px',
@@ -324,6 +330,12 @@ const useStyles = makeStyles(theme => ({
     marginLeft: '20px',
     marginTop: '10px',
     marginBottom: '20px',
+    '&:hover, &:focus': {
+      backgroundColor: '#C1A783',
+      color: '#000000'
+    }
+  },
+  exportButton: {
     '&:hover, &:focus': {
       backgroundColor: '#C1A783',
       color: '#000000'
@@ -462,7 +474,8 @@ const useStyles = makeStyles(theme => ({
     border: '2px solid #D55804',
     /*borderColor: `'#D55804' !important`,
     borderWidth: '2px',*/
-    marginTop: '15px'
+    marginTop: '10px',
+    marginLeft: '15px'
   },
   compare: {
     padding: '6px 4px',
@@ -897,6 +910,9 @@ export default function Codelist() {
     right: false,
   });
   const [dropDownName, setDropDownName] = React.useState("");
+  const [exportDataElement, setExportDataElement] = React.useState("");
+  const [exportSource, setExportSource] = React.useState("");
+  const [exportType, setExportType] = React.useState("");
 
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [dialogMessage, setDialogMessage] = React.useState('');
@@ -997,26 +1013,11 @@ export default function Codelist() {
       return;
     }
     var compareText = document.getElementById("compareSearch") ? document.getElementById("compareSearch").value : '';
-    // if (!dataElementToCompare) {
-    //   if (compareText !== '') {
-    //     if (!de[compareText]) {
-    //       await getDataElement(compareText);
-    //     }
-    //     console.log("inside performCompare dataElement " + de[compareText])
-    //     toggleCompareDetailDrawer(dataElementDetail, de[compareText], 'bottom', true)
-    //   }
-    // } else {
-    //   if (!de[dataElementToCompare]) {
-    //     await getDataElement(dataElementToCompare);
-    //   }
-    //   console.log("inside performCompare dataElement " + de[dataElementToCompare])
-    //   toggleCompareDetailDrawer(dataElementDetail, de[dataElementToCompare], 'bottom', true)
-    // }
 
     let compareLink = ''
     if (!dataElementToCompare) {
       // if (compareText !== '') {
-        compareLink = '/compare?id1=' + dataElementDetail.id + '&id2=' + compareText + '&dataElementDetail=true'
+      compareLink = '/compare?id1=' + dataElementDetail.id + '&id2=' + compareText + '&dataElementDetail=true'
       //}
     } else {
       compareLink = '/compare?id1=' + dataElementDetail.id + '&id2=' + dataElementToCompare + '&dataElementDetail=true'
@@ -1274,8 +1275,9 @@ export default function Codelist() {
       Object.keys(Object(deMappings[id])).map(
 
         async function (key) {
-          if (Object(deMappings[id])[key].map_type === 'Derived From') {
-            const derivationId = Object(deMappings[id])[key].to_concept_code
+          let derivationId = ''
+          if (Object(deMappings[id])[key].map_type === 'Derived From' || Object(deMappings[id])[key].map_type === 'Replaces') {
+            derivationId = Object(deMappings[id])[key].to_concept_code
             if (derivationId === id) {
               let from_concept_url = Object(deMappings[id])[key].from_concept_url
               if (from_concept_url.endsWith('/')) {
@@ -1284,25 +1286,38 @@ export default function Codelist() {
               let arr = from_concept_url.split('/')
               derivationId = arr[arr.length - 1]
             }
-            if (!deMappings[derivationId]) {
-              queryMapping = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + version + '/concepts/' + derivationId + '/?includeMappings=true&includeInverseMappings=true';
-              response = await fetch(queryMapping);
-              if (!response.ok) {
-                console.log(response);
-                setErrorDisplay("Failed to fetch")
-                throw new Error(
-                  `Error when retrieving data element mappings ${response.status} ${response.statusText}`
-                );
-              }
-              jsonData = await response.json()
-              sortedData = sortJSONByKey(jsonData.mappings, 'to_concept_name', 'asc');
-              deMappings[derivationId] = sortedData
-              setDataElementMapping(deMappings[derivationId]);
-              if (!de[derivationId]) {
-                de[derivationId] = jsonData
-              }
+          }
+          //   else if (Object(deMappings[id])[key].map_type === 'Replaces') {
+          //     derivationId = Object(deMappings[id])[key].to_concept_code
+          //    if (derivationId === id) {
+          //     let from_concept_url = Object(deMappings[id])[key].from_concept_url
+          //     if (from_concept_url.endsWith('/')) {
+          //       from_concept_url = from_concept_url.substring(0, from_concept_url.length - 1)
+          //     }
+          //     let arr = from_concept_url.split('/')
+          //     derivationId = arr[arr.length - 1]
+          //    }
+          //  }
+          if (!deMappings[derivationId]) {
+            queryMapping = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + version + '/concepts/' + derivationId + '/?includeMappings=true&includeInverseMappings=true';
+            console.log(" queryByDataElement " + queryMapping)
+            response = await fetch(queryMapping);
+            if (!response.ok) {
+              console.log(response);
+              setErrorDisplay("Failed to fetch")
+              throw new Error(
+                `Error when retrieving data element mappings ${response.status} ${response.statusText}`
+              );
+            }
+            jsonData = await response.json()
+            sortedData = sortJSONByKey(jsonData.mappings, 'to_concept_name', 'asc');
+            deMappings[derivationId] = sortedData
+            setDataElementMapping(deMappings[derivationId]);
+            if (!de[derivationId]) {
+              de[derivationId] = jsonData
             }
           }
+
         }
       )
     } catch (e) {
@@ -1397,6 +1412,7 @@ export default function Codelist() {
       })
 
       setSelectedDataElement(tempDataElement);
+      setChecked(true);
     } else {
       setSelectedDataElement([]);
     }
@@ -1409,6 +1425,20 @@ export default function Codelist() {
     setAnchorEl(anchorEl ? null : event.currentTarget);
     setDropDownName(buttonName);
 
+  };
+  // set export popup
+  function exportMenu(buttonName, id, source, type) {
+    event = event || window.event;
+    setAnchorEl(anchorEl ? null : event.currentTarget);
+    setDropDownName(buttonName);
+    setExportDataElement(id)
+    setExportSource(source)
+    setExportType(type)
+  };
+  //set select popup
+  const selectMenu = buttonName => event => {
+    setAnchorEl(anchorEl ? null : event.currentTarget);
+    setDropDownName(buttonName);
 
   };
   const popOpen = Boolean(anchorEl);
@@ -1422,14 +1452,43 @@ export default function Codelist() {
     setDownloadValue(event.target.value);
   };
 
+  const [exportValue, setExportValue] = React.useState('HTML');
+  const handleExportChange = event => {
+    setExportValue(event.target.value);
+  };
+
   const performDownload = event => {
-    const baseDownloadURL = "https://test.ohie.datim.org:5000/show-msp";
+    const baseDownloadURL = "https://test.ohie.datim.org:5000/ocl-etl/msp";
     let downloadURL = "";
     if (selectedDataElement.length > 0) {
       downloadURL = baseDownloadURL + "?dataElements=" + selectedDataElement.toString().trim() + "&format=" + downloadValue.trim();
     } else if (values.dataSet !== "All") {
-      downloadURL = baseDownloadURL + "?collection=" + collection + "&format=" + downloadValue.trim();
+      downloadURL = baseDownloadURL + '/' + collection + "?format=" + downloadValue.trim();
     }
+    let downloadLink = document.createElement('a');
+    downloadLink.href = downloadURL;
+    if (downloadValue.trim() !== "CSV") {
+      downloadLink.setAttribute("target", "_blank");
+    }
+    downloadLink.setAttribute('download', "download");
+    downloadLink.click();
+    revokeDownloadLink(downloadLink.href);
+  }
+
+  const performExport = event => {
+    let downloadURL = "";
+    if (exportValue.trim() === 'OCL') {
+      downloadURL = 'https://api.' + domain + '/orgs/' + org + '/sources/MER/concepts/' + exportDataElement;
+    }
+    else {
+      if (exportType === 'data element') {
+        downloadURL = 'https://dev-de.datim.org/api/dataElements/' + exportDataElement + '.' + exportValue.trim() + '?fields=*'
+      }
+      else {
+        downloadURL = 'https://dev-de.datim.org/api/categoryOptionCombos/' + exportDataElement + '.' + exportValue.trim() + '?fields=*'
+      }
+    }
+    console.log("downloadURL " + downloadURL)
     let downloadLink = document.createElement('a');
     downloadLink.href = downloadURL;
     if (downloadValue.trim() !== "CSV") {
@@ -1446,7 +1505,7 @@ export default function Codelist() {
     }, 10000);
   }
 
-  const clearSelectedDataElements = event => {
+  const clearAll = event => {
     setSelectedDataElement([]);
     selectDataTemp = {}
   }
@@ -1488,13 +1547,6 @@ export default function Codelist() {
 
       else {
         setCompare({ ...comparePanel, [DATIM]: true });
-        //setComparePanel({ ...comparePanel, [side]: open });
-
-        //const selectDataTemp = [];
-
-        //get data element details of the selected data elements
-
-        // eslint-disable-next-line array-callback-return
 
         let temp = []
         Object.values(selectDataTemp).map(value => {
@@ -1526,8 +1578,12 @@ export default function Codelist() {
       return;
     }
     setDataElementDetail(dataElement);
-    setDetailPanel({ ...detailPanel, [side]: open });
-    if (!open) {
+    //setDetailPanel({ ...detailPanel, [side]: open });
+    if (open) {
+      history.push('/dataElementDetail?id=' + dataElement.id)
+    }
+    else {
+      setShowLinked(false)
       history.push('/codelist')
     }
 
@@ -1640,12 +1696,7 @@ export default function Codelist() {
     }
   };
 
-
-  const renderTree = (nodes) => (
-    <TreeItem key={nodes.derived_category_option_combo[0].id} nodeId={nodes.derived_category_option_combo[0].id} label={nodes.derived_category_option_combo[0].name}>
-      {Array.isArray(nodes.source_data_element_name) ? nodes.source_data_element_name.map((node) => renderTree(node)) : null}
-    </TreeItem>
-  );
+  const [showLinked, setShowLinked] = React.useState(false);
 
   return (
     <Route render={(history) => (
@@ -1669,45 +1720,19 @@ export default function Codelist() {
           <Grid container alignItems="center" >
             {<Grid item xs={12} md={7} >
               {/* <headings.H1>Data Elements</headings.H1> */}
-              <Breadcrumb></Breadcrumb>
+              {/* <Breadcrumb></Breadcrumb> */}
             </Grid>}
 
             <Grid item xs={12} md={5} justifycontent="flex-end" >
-              {/* search bar */}
-              <Paper component="form" className={classes.search}>
-                <InputBase
-                  className={classes.input}
-                  placeholder="Search Data Elements"
-                  inputProps={{ 'aria-label': 'search data elements' }}
-                  id="inputSearch"
-                  key="inputSearch"
-                  onKeyDown={handleKeyPress}
-                  onChange={handleSearchInputChange}
-                  value={searchInputText}
-                />
-
-                <IconButton type="button" className={classes.searchButton} aria-label="search" id="searchButton" onClick={performSearch}  >
-                  <SearchIcon />
-                </IconButton>
-              </Paper>
             </Grid>
           </Grid>
           {/* </div> */}
-
-
           {errorDisplay !== null ?
             <div className={classes.errorMessage}>{errorDisplay}</div>
             // <Alert severity="error">{errorDisplay}</Alert>
             : null}
-
-
-
-
-
           {/* <div className={classes.container}> */}
           <Grid container>
-
-
             {/* filters */}
             <Grid item xs={12} md={3}>
 
@@ -1780,9 +1805,6 @@ export default function Codelist() {
                               key => <option key={Math.random()} >{key}</option>
                             )
                           }
-                          {/* <option value={'2020'}>2020</option>
-                        <option value={'2019'} >2019</option>
-                        <option value={'2018'}>2018</option> */}
                         </Select>
                       </FormControl>
                     </Grid>
@@ -1808,20 +1830,13 @@ export default function Codelist() {
                               }
 
                             }}
-
                           >
                             {(values.fiscal === 'All') ? (<option value={'All'}>All</option>) :
                               type.map(key => <option key={Math.random()} >{key}</option>)
                             }
-
-                            {/* <option value={'SIMS'}>SIMS</option> */}
                           </Select>
                         </FormControl>
                       </Grid>
-
-
-
-
                       {/* data set filter */}
                       {/* <Grid item xs={12} className={advanced ? classes.filter : classes.hide}> */}
                       <Grid item xs={12} className={classes.filter}>
@@ -1841,7 +1856,6 @@ export default function Codelist() {
                               },
                               disabled: values.source === 'PDH'
                             }}
-
                           >
                             {(values.type === 'All') ? (<option value={'All'}>All</option>) : ([])}
                             {(values.type === 'All') ? (Object.values(codeListMap[values.fiscal]).map(
@@ -1858,39 +1872,6 @@ export default function Codelist() {
                         </FormControl>
                       </Grid>
                     </fieldset>
-                    {/* <Grid item xs={12} className={classes.filter}>
-                    <FormControl className={classes.formControl}>
-
-                      <Table className={classes.table} aria-label="simple table">
-                        <TableBody>
-                          {(values.type === 'All') ? (<TableRow key={Math.random()}>
-                            <TableCell component="th" scope="row">
-                              All
-                                      </TableCell>
-                          </TableRow>) : ([])}
-                          {Object.values(codeListMap[values.fiscal]).map(
-
-                            key => key.includes(values.type) ? (
-                              <TableRow key={Math.random()} >
-                                <TableCell component="th" scope="row" onClick={handleTableClick}>
-                                {key} 
-                                </TableCell>
-                              </TableRow>
-                            ) : ([])
-                          )}
-
-                        </TableBody>
-                      </Table>
-
-                      {(values.type === 'All') ? (<option value={'All'}>All</option>) : ([])}
-                        {Object.values(codeListMap[values.fiscal]).map(
-
-                          key => key.includes(values.type) ? (<option key={Math.random()} >{key}</option>) : ([])
-                        )
-                        }
-
-                    </FormControl>
-                  </Grid> */}
 
                     <fieldset className={classes.fieldset}>
 
@@ -1921,7 +1902,6 @@ export default function Codelist() {
                           </Select>
                         </FormControl>
                       </Grid>
-
                       {/* indicator filter */}
                       {/* <Grid item xs={12} className={advanced ? classes.filter : classes.hide} > */}
                       <Grid item xs={12} className={classes.filter} >
@@ -1951,21 +1931,6 @@ export default function Codelist() {
                       </Grid>
                     </fieldset>
                   </form>
-
-                  {/* filter functions */}
-                  {/* <Button onClick={displayAdvanced} className={classes.toggleFilters}>
-      {advanced ? 'Less Filters' : 'More Filters'}
-</Button> */}
-                  {/* <Button variant="outlined" onClick={clearValues} className={classes.filterButton}>
-       Clear Filters
-</Button> */}
-
-
-
-
-
-
-
                 </div>
 
               </Paper>
@@ -1974,35 +1939,40 @@ export default function Codelist() {
             <Grid item xs={12} md={9} className={classes.dataElementContent}>
 
               {/* dashboard, including download, compare, select all buttons */}
+
+
               <div className={classes.tabDashboard}>
-                <div>
-                  {selectedDataElement && selectedDataElement.length > 0 ?
+                <div >
+                  <div style={{ flexDirection: 'row', display: 'flex' }} >
+                    {/* {selectedDataElement && selectedDataElement.length > 0 ?
                     <Button variant="outlined" className={classes.actionButton} onClick={clearSelectedDataElements} id="clearDataElementButton">
                       <ActionButtonLabel> Clear Selection   <span style={{ background: '#D3D3D3', marginLeft: '2px', paddingLeft: '5px', paddingRight: '5px', borderRadius: '5px' }}> {selectedDataElement.length}</span></ActionButtonLabel></Button>
-                    : null}
-                  <Button variant="outlined" className={classes.actionButton} onClick={dropDownMenu("download")} id="downloadButton" disabled={selectedDataElement.length === 0 && values.dataSet === "All" ? true : false}>
-                    <ActionButtonLabel> {getDownloadLabel()}</ActionButtonLabel>
-                    {
-                      selectedDataElement.length === 0 && values.dataSet === "All" ?
-                        <GetAppIcon /> : <GetAppIcon style={{ color: '#1D5893' }} />
-                    }
-                  </Button>
-                  {/* <Button variant="outlined" className={classes.actionButton} onClick={dropDownMenu("compare")} id="comparisonButton">
-
-Compare selected data elements
-</Button> */}
-
-                  {/* <NavLink to={{
-                  //pathname: (selectedDataElement.length < 2 || selectedDataElement.length > 3)? comparePage : "/compare",
-                  pathname: comparePage,
-                  data: { 'deMappings': deMappings, 'selectedDatim': selectedDatim } // your data array of objects
-                }} activeClassName="sidebarActive" className={classes.buttonNav} onClick={toggleDrawer('bottom', true)}> */}
-                  <Button variant="outlined" className={classes.actionButton}
-                    onClick={toggleDrawer('bottom', true)}
-                    id="comparisonButton">
-                    <ActionButtonLabel>Compare selected data elements</ActionButtonLabel>
-                    <CompareArrowsIcon style={{ color: '#1D5893', marginLeft: '2px' }} />
-                  </Button>
+                    : null} */}
+                    <div>
+                      <Tooltip disableFocusListener title="Download">
+                        <i>
+                          <Button variant="outlined" className={classes.actionButton} style={{height:'48px', width:'80px', marginBottom: '10px'}} onClick={dropDownMenu("download")} id="downloadButton" disabled={selectedDataElement.length === 0 && values.dataSet === "All" ? true : false}>
+                            {/* <ActionButtonLabel> {getDownloadLabel()}</ActionButtonLabel> */}
+                            {
+                              selectedDataElement.length === 0 && values.dataSet === "All" ?
+                                <GetAppIcon /> : <GetAppIcon style={{ color: '#1D5893' }} />
+                            }
+                          </Button></i></Tooltip></div>
+                    <div >
+                      <Tooltip disableFocusListener disableTouchListener title="Compare 2 or 3 Data Elements">
+                        <i >
+                          <Button variant="outlined" className={classes.actionButton} style={{height:'48px', width:'80px', marginBottom: '10px'}}
+                            onClick={toggleDrawer('bottom', true)}
+                            id="comparisonButton"
+                            disabled={selectedDataElement.length < 2 || selectedDataElement.length > 3 ? true : false}>
+                            {/* <ActionButtonLabel>Compare selected data elements</ActionButtonLabel> */}
+                            {
+                              selectedDataElement.length < 2 || selectedDataElement.length > 3 ?
+                                <CompareArrowsIcon /> : <CompareArrowsIcon style={{ color: '#1D5893', marginLeft: '2px' }} />
+                            }
+                          </Button>
+                        </i>
+                      </Tooltip></div></div>
                   {/* </NavLink> */}
                 </div>
 
@@ -2018,16 +1988,57 @@ Compare selected data elements
                     <DialogActions>
                       <Button autoFocus onClick={handleDialogClose} color="primary">
                         OK
-          </Button>
+                   </Button>
                     </DialogActions>
                   </Dialog>
                 </div>
+                <div style={{ flexDirection: 'row', display: 'flex' }} >
+                  <div>
 
-                {/* <Button variant="outlined" className={classes.actionButton} onClick={selectAll} id="downloadButton">
-                Select All
-</Button> */}
+                    <Tooltip disableFocusListener title="Select">
+                      <Button  style={{marginTop:'10px'}}>
+                        {selectedDataElement.length == 0 ? <Checkbox inputProps={{ 'aria-label': 'uncontrolled-checkbox' }} onClick={selectAll} 
+                        style={{padding:'5px', marginLeft:'10px'}}/> : ''}
+                        {selectedDataElement.length > 0 && selectedDataElement.length < dataElements.length ?
+                          <Checkbox
+                            defaultChecked
+                            indeterminate
+                            inputProps={{ 'aria-label': 'indeterminate checkbox' }}
+                            onClick={clearAll}
+                            style={{padding:'5px', marginLeft:'10px'}}
+                          /> : ''}
+                        {selectedDataElement.length == dataElements.length ? <Checkbox
+                          checked={checked}
+                          onChange={handleChange}
+                          inputProps={{ 'aria-label': 'primary checkbox' }}
+                          onClick={selectAll}
+                          style={{padding:'5px', marginLeft:'10px'}}
+                        /> : ''}
 
+                        <TiArrowSortedDown onClick={selectMenu('select')} />
 
+                      </Button>
+                    </Tooltip>
+
+                  </div>
+                  <div style={{ width: '500px' }}>
+                    <Paper component="form" className={classes.search}>
+                      <InputBase
+                        className={classes.input}
+                        placeholder="Search Data Elements"
+                        inputProps={{ 'aria-label': 'search data elements' }}
+                        id="inputSearch"
+                        key="inputSearch"
+                        onKeyDown={handleKeyPress}
+                        onChange={handleSearchInputChange}
+                        value={searchInputText}
+                      />
+
+                      <IconButton type="button" className={classes.searchButton} aria-label="search" id="searchButton" onClick={performSearch}  >
+                        <SearchIcon />
+                      </IconButton>
+                    </Paper></div>
+                </div>
                 {/* popover panel */}
                 <Popover
                   id={popId}
@@ -2042,7 +2053,6 @@ Compare selected data elements
                     vertical: 'top',
                     horizontal: 'center',
                   }}
-
                 >
                   {/* download popover panel */}
                   {
@@ -2061,36 +2071,35 @@ Compare selected data elements
                         </Button>
                         </FormGroup>
                       </FormControl> :
-
-                      //  compare popover panel
-                      <FormControl component="fieldset" className={classes.popOver}>
-
-                        <FormGroup>
-
-                          <FormLabel component="legend" className={classes.formLegend}>Data Sources</FormLabel>
-                          <FormControlLabel
-                            control={<Checkbox checked={DATIM} style={{ color: '#D55804' }} onChange={handleCompareChange('DATIM')} value="DATIM" />}
-                            label="DATIM" disabled
-                          />
-                          <FormControlLabel
-                            control={<Checkbox checked={PDH} style={{ color: '#D55804' }} onChange={handleCompareChange('PDH')} value="PDH" />}
-                            label="PDH"
-                          />
-                          <FormControlLabel
-                            control={
-                              <Checkbox checked={MOH} style={{ color: '#D55804' }} onChange={handleCompareChange('MOH')} value="MOH" />
-                            }
-                            label="MOH"
-                          />
-                          <Button type="submit" variant="outlined" className={classes.downloadButton} onClick={toggleDrawer('bottom', true)} >
-                            COMPARE SOURCES
-         </Button>
-                        </FormGroup>
-                      </FormControl>
+                      dropDownName === "export" ?
+                        <FormControl component="fieldset" className={classes.popOver}>
+                          <FormGroup>
+                            {exportSource === 'DATIM' ?
+                              <FormLabel component="legend" className={classes.formLegend}>From DATIM (Acount Required)</FormLabel> : ''}
+                            {exportSource === 'DATIM' ?
+                              <RadioGroup aria-label="export" name="exportRadio" value={exportValue} onChange={handleExportChange}>
+                                <FormControlLabel control={<Radio style={{ color: '#D55804' }} value="HTML" />} label="HTML" />
+                                <FormControlLabel control={<Radio style={{ color: '#D55804' }} value="CSV" />} label="CSV" />
+                                <FormControlLabel control={<Radio style={{ color: '#D55804' }} value="JSON" />} label="JSON" />
+                                <FormControlLabel control={<Radio style={{ color: '#D55804' }} value="XML" />} label="XML" />
+                              </RadioGroup> : ''}
+                            <FormLabel component="legend" className={classes.formLegend}>From Open Concept Lab (OCL)</FormLabel>
+                            <RadioGroup aria-label="export" name="exportRadio" value={exportValue} onChange={handleExportChange}>
+                              <FormControlLabel control={<Radio style={{ color: '#D55804' }} value="OCL" />} label="JSON" />
+                            </RadioGroup>
+                            <Button type="submit" variant="outlined" className={classes.downloadButton} onClick={performExport}>
+                              Download DATA
+                      </Button>
+                          </FormGroup>
+                        </FormControl> :
+                        <FormControl component="fieldset" className={classes.popOver}>
+                          <FormGroup>
+                            <MenuItem value="All" onClick={selectAll}>All</MenuItem>
+                            <MenuItem value="None" onClick={clearAll}>None</MenuItem>
+                          </FormGroup>
+                        </FormControl>
 
                   }
-
-
 
 
                 </Popover>
@@ -2105,9 +2114,6 @@ Compare selected data elements
                   <div style={{ paddingTop: '1rem', paddingLeft: '1rem' }}>Loading data elements ...</div>
                 </div> : ([])
               }
-              {/* data elements */}
-              {/* {dataElements.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(dataElement => ( */}
-              {/* {/* <ErrorBoundary> */}
               {dataElements.map(dataElement => (
 
                 <div key={dataElement.id}>
@@ -2142,55 +2148,33 @@ Compare selected data elements
                           spacing={1}>
                           <Grid item xs={9}  >
                             <Typography className={classes.heading}>
-                              <strong>{dataElement.display_name}</strong>
+                              {dataElement.display_name}
                             </Typography>
                           </Grid>
 
                           <Grid item xs={3}>
-                            {/* <Typography>
-                          <strong>Data Element UID</strong>: {dataElement.external_id}
-                        </Typography> */}
                           </Grid>
-                          {/* <Chip
-                            variant="outlined"
-                            size="small"
-                            label={"UID: " + dataElement.external_id}
-                          //onClick={handleClick}
-                          /></Grid> */}
-                          <Grid item xs={2} >
+                          <Grid item xs={2} md={3}>
                             <Tooltip disableFocusListener title="Click to copy UID">
-                              <Chip
-                                variant="outlined"
-                                size="small"
-                                style={{ color: '#4e4f4f', marginTop: '10px' }}
-                                label={"UID: " + dataElement.id}
+                              <span className={classes.chip}
                                 onClick={() => copyToClipboard(dataElement.id)}
-                              />
+                              >{"UID: " + dataElement.id}</span>
                             </Tooltip>
                           </Grid>
-                          <Grid item xs={2} >
-                            <Chip
-                              variant="outlined"
-                              size="small"
-                              style={{ marginLeft: '25px', backgroundColor: '#d8ebe0', color: '#4e4f4f', marginTop: '10px' }}
-                              label={"Source: " + dataElement.extras.source}
-                              clickable
-                            /></Grid>
-                          <Grid item xs={2} >
-                            <Chip
-                              variant="outlined"
-                              size="small"
-                              style={{ marginLeft: '25px', backgroundColor: '#c0b3c7', color: '#4e4f4f', marginTop: '10px' }}
-                              label={"Type: " + dataElement.concept_class}
-                              clickable
-                            /></Grid>
+                          <Grid item xs={2} md={3}>
+                            <span className={classes.chip}
+                              onClick={() => copyToClipboard(dataElement.id)}
+                            >{"Source: " + dataElement.extras.source}</span>
+                          </Grid>
+                          <Grid item xs={2} md={3}>
+                            <span className={classes.chip}
+                              onClick={() => copyToClipboard(dataElement.id)}
+                            >{"Type: " + dataElement.concept_class}</span>
+                          </Grid>
                           <Grid item xs={3} ></Grid>
                         </Grid>
                       </ErrorBoundary>
                     </ExpansionPanelSummary>
-
-
-
                     {/* data elements details */}
                     <ExpansionPanelDetails
                       className={classes.expansionPanelDetails}
@@ -2205,47 +2189,47 @@ Compare selected data elements
 
                           {dataElement.descriptions ? <strong>Description: </strong> : ''}
                           {dataElement.descriptions ? dataElement.descriptions[0].description : ""}
-                          {dataElement.descriptions ? <br></br>  : ''}
-                          {dataElement.descriptions ? <br></br>  : ''}
+                          {dataElement.descriptions ? <br></br> : ''}
+                          {dataElement.descriptions ? <br></br> : ''}
 
                           {dataElement.names[1] ? <strong>Short Name: </strong> : ""}
                           {dataElement.names[1] ? dataElement.names[1].name : ""}
-                          {dataElement.names[1] ? <br></br>  : ''}
-                          {dataElement.names[1] ? <br></br>  : ''}
+                          {dataElement.names[1] ? <br></br> : ''}
+                          {dataElement.names[1] ? <br></br> : ''}
 
                           {dataElement.names[2] ? <strong>Code: </strong> : ""}
                           {dataElement.names[2] ? dataElement.names[2].name : ""}
-                          {dataElement.names[2] ? <br></br>  : ''}
-                          {dataElement.names[2] ? <br></br>  : ''}
+                          {dataElement.names[2] ? <br></br> : ''}
+                          {dataElement.names[2] ? <br></br> : ''}
 
                           {dataElement.extras.indicator ? <strong>Indicator: </strong> : ""}
                           {dataElement.extras.indicator ? dataElement.extras.indicator : ""}
-                          {dataElement.extras.indicator ? <br></br>  : ''}
-                          {dataElement.extras.indicator ? <br></br>  : ''}
+                          {dataElement.extras.indicator ? <br></br> : ''}
+                          {dataElement.extras.indicator ? <br></br> : ''}
 
-                          {dataElement.extras["Applicable Periods"] ? (dataElement.extras['Applicable Periods'].length > 0 ? <strong>Applicable Periods: </strong> : "") :""}
+                          {dataElement.extras["Applicable Periods"] ? (dataElement.extras['Applicable Periods'].length > 0 ? <strong>Applicable Periods: </strong> : "") : ""}
                           {dataElement.extras['Applicable Periods'] ? (dataElement.extras['Applicable Periods'].length > 0 ? Object.keys(dataElement.extras['Applicable Periods']).map(
 
                             key =>
-                            dataElement.extras['Applicable Periods'][key] + ", "
+                              dataElement.extras['Applicable Periods'][key] + ", "
                           ) : '') : ''}
-                          {dataElement.extras["Applicable Periods"] ? (dataElement.extras['Applicable Periods'].length > 0 ? <br></br> : "") :""}
-                          {dataElement.extras["Applicable Periods"] ? (dataElement.extras['Applicable Periods'].length > 0 ? <br></br> : "") :""}
+                          {dataElement.extras["Applicable Periods"] ? (dataElement.extras['Applicable Periods'].length > 0 ? <br></br> : "") : ""}
+                          {dataElement.extras["Applicable Periods"] ? (dataElement.extras['Applicable Periods'].length > 0 ? <br></br> : "") : ""}
 
                           {dataElement.extras.resultTarget ? <strong>Result/Target: </strong> : ""}
                           {dataElement.extras.resultTarget ? dataElement.extras.resultTarget : ""}
-                          {dataElement.extras.resultTarget ? <br></br>  : ''}
-                          {dataElement.extras.resultTarget ? <br></br>  : ''}
+                          {dataElement.extras.resultTarget ? <br></br> : ''}
+                          {dataElement.extras.resultTarget ? <br></br> : ''}
 
                           {dataElement.datatype ? <strong>Data Type: </strong> : ''}
                           {dataElement.datatype ? dataElement.datatype : ""}
-                          {dataElement.datatype ? <br></br>  : ''}
-                          {dataElement.datatype ? <br></br>  : ''}
+                          {dataElement.datatype ? <br></br> : ''}
+                          {dataElement.datatype ? <br></br> : ''}
 
                           {dataElement.retired ? <strong>Retired: </strong> : ''}
                           {dataElement.retired ? dataElement.datatype : ""}
-                          {dataElement.retired ? <br></br>  : ''}
-                          {dataElement.retired ? <br></br>  : ''}
+                          {dataElement.retired ? <br></br> : ''}
+                          {dataElement.retired ? <br></br> : ''}
                         </Grid>
 
                         <Grid item xs={12} className={classes.expansionPanelLeft}>
@@ -2253,6 +2237,10 @@ Compare selected data elements
                           <Button variant="outlined" className={classes.detailsButton} onClick={toggleDetailDrawer(dataElement, 'bottom', true)} color="primary">
                             View Data Element Details
                 </Button>
+                          <Button variant="outlined" className={classes.actionButton} onClick={() => exportMenu("export", dataElement.id, dataElement.extras.source, 'data element')} id="downloadButton" color="primary">
+                            <ActionButtonLabel> Export</ActionButtonLabel><GetAppIcon style={{ color: '#1D5893' }} />
+
+                          </Button>
                           {/* </ExpansionPanelActions> */}
                         </Grid>
 
@@ -2279,11 +2267,51 @@ Compare selected data elements
                           {/* <Route render={() => ( */}
                           {/* <div className={classes.tableContainer}> */}
                           <Tabs value={panel} onChange={handleChange} className={classes.tabContainer} classes={{ indicator: classes.bigIndicator }}>
-                            <Tab label="DISAGGREGATIONS FORMULA" {...a11yProps(0)} />
-                            <Tab label="DISAGGREGATIONS LIST" {...a11yProps(1)} />
+                            <Tab label="DISAGGREGATIONS LIST" {...a11yProps(0)} />
+                            <Tab label="DISAGGREGATIONS FORMULA" {...a11yProps(1)} />
                             <Tab label="DERIVATIONS" {...a11yProps(2)} />
                           </Tabs>
                           <TabPanel value={panel} index={0} className={classes.tabPanel}>
+                            <Grid item xs={12} className={classes.comboTable}>
+
+
+
+
+                              <Table className={classes.table} aria-label="simple table">
+                                <TableHead>
+                                  <TableRow>
+                                    <TableCell>Name</TableCell>
+                                    <TableCell>Code</TableCell>
+                                    <TableCell>Action</TableCell>
+                                  </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                  {
+                                    (deMappings[dataElement.id]) ? Object.keys(Object(deMappings[dataElement.id])).map(
+
+                                      key =>
+                                        Object(deMappings[dataElement.id])[key].map_type === 'Has Option' ? (
+                                          <TableRow key={Math.random()}>
+                                            <TableCell component="th" scope="row">
+                                              {Object(deMappings[dataElement.id])[key].to_concept_name}
+                                            </TableCell>
+                                            <TableCell component="th" scope="row">
+                                              {Object(deMappings[dataElement.id])[key].to_concept_code}
+                                            </TableCell>
+                                            <TableCell component="th" scope="row">
+                                              <Button variant="outlined" className={classes.exportButton} onClick={() => exportMenu("export", Object(deMappings[dataElement.id])[key].to_concept_code, dataElement.extras.source, 'coc')} id="downloadButton" color="primary">
+                                                <ExportButtonLabel> Export</ExportButtonLabel><GetAppIcon style={{ color: '#1D5893' }} />
+
+                                              </Button></TableCell>
+                                          </TableRow>
+                                        ) : ''
+                                    ) : ''
+                                  }
+                                </TableBody>
+                              </Table>
+                            </Grid>
+                          </TabPanel>
+                          <TabPanel value={panel} index={1} className={classes.tabPanel}>
                             <Grid container alignItems="center" justify="space-between">
                               <Grid   >
                                 <div className={classes.tableContainer}>
@@ -2311,137 +2339,12 @@ Compare selected data elements
                               </Grid>
                             </Grid>
                           </TabPanel>
-                          <TabPanel value={panel} index={1} className={classes.tabPanel}>
-                            <Grid item xs={12} className={classes.comboTable}>
-
-
-
-
-                              <Table className={classes.table} aria-label="simple table">
-                                <TableHead>
-                                  <TableRow>
-                                    <TableCell>Name</TableCell>
-                                    <TableCell>Code</TableCell>
-                                  </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                  {
-                                    (deMappings[dataElement.id]) ? Object.keys(Object(deMappings[dataElement.id])).map(
-
-                                      key =>
-                                        Object(deMappings[dataElement.id])[key].map_type === 'Has Option' ? (
-                                          <TableRow key={Math.random()}>
-                                            <TableCell component="th" scope="row">
-                                              {Object(deMappings[dataElement.id])[key].to_concept_name}
-                                            </TableCell>
-                                            <TableCell component="th" scope="row">
-                                              {Object(deMappings[dataElement.id])[key].to_concept_code}
-                                            </TableCell>
-                                          </TableRow>
-                                        ) : ''
-                                    ) : ''
-                                  }
-                                </TableBody>
-                              </Table>
-                            </Grid>
-                          </TabPanel>
-
                           <TabPanel value={panel} index={2} className={classes.tabPanel} >
-                            {/* <Table className={classes.table} aria-label="simple table">
-                                  <TableHead>
-                                    <TableRow>
-                                      <TableCell>Source Data Element</TableCell>
-                                      <TableCell>Source Disaggregation</TableCell>
-                                      <TableCell>+/-</TableCell>
-                                    </TableRow>
-                                  </TableHead>
-                                  <TableBody>
-                                    {
-                                      (dataElement.extras.source_data_elements) ? populatePDHDerivatives(dataElement.extras.source_data_elements) : ''
-                                    }
-                                    {
-                                      Object.keys(pdhDerivatives).map(
 
-                                        key =>
-                                          <TableRow key={Math.random()}>
-                                            <TableCell component="th" scope="row" rowSpan={pdhDerivatives[key].size}>
-                                              {key}
-                                            </TableCell>
-                                            <TableCell>
-                                              {Object.keys(pdhDerivatives[key]).map(dissags =>
-                                                <TableRow key={Math.random()}>
-                                                  <TableCell component="th" scope="row" width="300">
-                                                    {pdhDerivatives[key][dissags].substring(0, pdhDerivatives[key][dissags].length - 1)}
-                                                  </TableCell>
-                                                </TableRow>
-                                              )}
-                                            </TableCell>
-                                            <TableCell>
-                                              {Object.keys(pdhDerivatives[key]).map(dissags =>
-                                                <TableRow key={Math.random()}>
-                                                  <TableCell component="th" scope="row" align="right">
-                                                    {(pdhDerivatives[key][dissags].substring(pdhDerivatives[key][dissags].length - 1, pdhDerivatives[key][dissags].length)) == 1 ? '+' : '-'}
-                                                  </TableCell>
-                                                </TableRow>
-                                              )}
-                                            </TableCell>
-                                          </TableRow>
-
-                                      )
-                                    }
-                                  </TableBody>
-                                </Table> */}
-                            {/* {pdhDerivatives = []} */}
                             {
                               (dataElement.extras.source_data_elements) ? populatePDHDerivatives(dataElement.extras.source_data_elements) : ''
                             }
-                            {/* <TableHead>
-                                    <TableRow>
-                                    <TableCell>Derived Disaggregate</TableCell>
-                                      <TableCell>Source Data Element</TableCell>
-                                      <TableCell>Source Disaggregation</TableCell>
-                                      <TableCell>+/-</TableCell>
-                                    </TableRow>
-                                  </TableHead>
-                                  <TableBody>
-                                  {
-                                      Object.keys(derivedCoC).map(
-                                        key =>
-                                        <TableRow key={Math.random()}>
-                                            <TableCell component="th" scope="row" rowSpan={derivedCoC[key].size}>
-                                              {key}
-                                            </TableCell>
-                                            {Object.values(derivedCoC[key]).map(
-                                              value =>
-                                            <TableRow>
-                                            <TableCell component="th" scope="row" rowSpan={pdhDerivatives[value].size}>
-                                              {value}
-                                            </TableCell>
-                                            <TableCell>
-                                              {Object.keys(pdhDerivatives[value]).map(dissags =>
-                                                <TableRow key={Math.random()}>
-                                                  <TableCell component="th" scope="row" width="300">
-                                                    {pdhDerivatives[value][dissags].split('|')[0]}
-                                                  </TableCell>
-                                                </TableRow>
-                                              )}
-                                            </TableCell>
-                                            <TableCell>
-                                              {Object.keys(pdhDerivatives[value]).map(dissags =>
-                                                <TableRow key={Math.random()}>
-                                                  <TableCell component="th" scope="row" align="right">
-                                                    {(pdhDerivatives[value][dissags].split('|')[1]) == 1 ? '+' : '-'}
-                                                  </TableCell>
-                                                </TableRow>
-                                              )}
-                                            </TableCell>
-                                            </TableRow>
-                                           
-                                            )}
- </TableRow>
-                                      )
-                                    }
-                                    </TableBody> */}
+
                             <Grid container alignItems="center" justify="space-between">
                               <Grid item xs={6}></Grid>
                               <Grid item xs={3}></Grid>
@@ -2507,10 +2410,6 @@ Compare selected data elements
                     <TablePagination
                       rowsPerPageOptions={[10, 25, 50, 100]}
                       labelDisplayedRows={({ from, to, count }) => `Displaying rows ${from}-${to} of ${count}`}
-                      // page={0}
-                      // rowsPerPage={10}
-                      // count={100}
-                      // onChangePage={() => {}}
                       count={count}
                       rowsPerPage={rowsPerPage}
                       page={page}
@@ -2567,39 +2466,39 @@ Compare selected data elements
                                     <TableBody>
                                       <TableRow>
                                         <TableCell><strong>Short Name</strong></TableCell>
-                                        <TableCell>{datim.names[1] ? (datim.names[1].name) : 'N/A'}</TableCell>
+                                        <TableCell>{datim.names[1] ? (datim.names[1].name) : '--'}</TableCell>
                                       </TableRow>
                                       <TableRow>
                                         <TableCell><strong>Code</strong></TableCell>
-                                        <TableCell>{datim.names[2] ? (datim.names[2].name) : 'N/A'}</TableCell>
+                                        <TableCell>{datim.names[2] ? (datim.names[2].name) : '--'}</TableCell>
                                       </TableRow>
                                       <TableRow className={classes.comboTable}>
                                         <TableCell><strong>Description</strong></TableCell>
-                                        <TableCell>{(datim.descriptions) ? datim.descriptions[0].description : "N/A"}</TableCell>
+                                        <TableCell>{(datim.descriptions) ? datim.descriptions[0].description : "--"}</TableCell>
                                       </TableRow>
                                       <TableRow>
                                         <TableCell><strong>UID</strong></TableCell>
-                                        <TableCell>{datim.id ? (datim.id) : 'N/A'}</TableCell>
+                                        <TableCell>{datim.id ? (datim.id) : '--'}</TableCell>
                                       </TableRow>
                                       <TableRow>
                                         <TableCell><strong>Source</strong></TableCell>
-                                        <TableCell>{datim.extras.source ? (datim.extras.source) : 'N/A'}</TableCell>
+                                        <TableCell>{datim.extras.source ? (datim.extras.source) : '--'}</TableCell>
                                       </TableRow>
                                       <TableRow>
                                         <TableCell><strong>Data Type</strong></TableCell>
-                                        <TableCell>{datim.datatype ? (datim.datatype) : 'N/A'}</TableCell>
+                                        <TableCell>{datim.datatype ? (datim.datatype) : '--'}</TableCell>
                                       </TableRow>
                                       <TableRow>
                                         <TableCell><strong>Domain Type</strong></TableCell>
-                                        <TableCell>{datim.extras.domainType ? (datim.extras.domainType) : 'N/A'}</TableCell>
+                                        <TableCell>{datim.extras.domainType ? (datim.extras.domainType) : '--'}</TableCell>
                                       </TableRow>
                                       <TableRow>
                                         <TableCell><strong>Value Type</strong></TableCell>
-                                        <TableCell>{datim.extras.valueType ? (datim.extras.valueType) : 'N/A'}</TableCell>
+                                        <TableCell>{datim.extras.valueType ? (datim.extras.valueType) : '--'}</TableCell>
                                       </TableRow>
                                       <TableRow>
                                         <TableCell><strong>Aggregation Type</strong></TableCell>
-                                        <TableCell>{datim.extras.aggregationType ? (datim.extras.aggregationType) : 'N/A'}</TableCell>
+                                        <TableCell>{datim.extras.aggregationType ? (datim.extras.aggregationType) : '--'}</TableCell>
                                       </TableRow>
                                       <TableRow>
                                         <TableCell><strong>Applicable Periods</strong></TableCell>
@@ -2612,21 +2511,31 @@ Compare selected data elements
                                                 datim.extras['Applicable Periods'][key] + ", "
 
                                             )
-                                            ) : 'N/A') : 'N/A'
+                                            ) : '--') : '--'
+                                          }
+                                        </TableCell>
+                                      </TableRow>
+                                      <TableRow>
+                                        <TableCell><strong>Code List Membership</strong></TableCell>
+                                        <TableCell>
+                                          {
+                                            datim.extras.codelists ? (datim.extras.codelists.length > 0 ? (Object.keys(datim.extras.codelists).map(
+
+                                              key =>
+
+                                                datim.extras.codelists[key].name + ", "
+
+                                            )
+                                            ) : '--') : '--'
                                           }
                                         </TableCell>
                                       </TableRow>
                                       <TableRow>
                                         <TableCell><strong>Result/Target</strong></TableCell>
-                                        <TableCell>{datim.extras.resultTarget ? datim.extras.resultTarget : 'N/A'}</TableCell>
+                                        <TableCell>{datim.extras.resultTarget ? datim.extras.resultTarget : '--'}</TableCell>
                                       </TableRow>
                                     </TableBody>
                                   </Table>
-
-                                  {/* <div className={`${classes.heroContainer} ${classes.compareRowColumn}`}>
-                                Description: {(datim.descriptions) ? datim.descriptions[0].description : "Not Available"}<br />
-
-                              </div> */}
                                 </ExpansionPanelSummary>
                                 <ExpansionPanelDetails className={classes.panelDetail}>
 
@@ -2665,137 +2574,6 @@ Compare selected data elements
                                   {/* )}></Route> */}
                                 </ExpansionPanelDetails>
                               </ExpansionPanel>
-
-                              {/* </div> */}
-
-
-
-
-                              {/* PDH row */}
-                              {/* 
-                          <div className={PDH ? classes.compareRowColumn : classes.hide}>
-
-
-                            {datim.pdh.length === 0 ? 'No matching PDH data element' : pdhDataElements.map(pdhDataElement => {
-                              if ((datim.pdh).includes(pdhDataElement.uid)) {
-                                return (
-                                  <ExpansionPanel className={classes.expandPanel} key={Math.random()}>
-                                    <ExpansionPanelSummary
-                                      expandIcon={<ExpandMoreIcon />}
-                                      aria-controls="panel3b-content"
-                                      id="panel3b-header"
-
-                                    > */}
-                              {/* <div className={classes.compareCardSummary}>
-                                        <div className={classes.compareCardText}>PDH Data Element: </div>
-                                        <div className={classes.compareCardName}>{pdhDataElement.name}</div>
-                                        <div className={classes.compareCardText}>PDH Data Element UID: <strong>{pdhDataElement.uid}</strong></div>
-                                        <div className={classes.compareCardText}>Derived Data Element? <strong>{pdhDataElement.derived}</strong></div>
-                                      </div>
-                                    </ExpansionPanelSummary>
-                                    <ExpansionPanelDetails className={classes.panelDetail}>
-
-
-                                      <Route render={({ history }) => (
-                                        <div className={classes.tableContainer}>
-                                          {/* data element Disaggregations */}
-                              {/* <strong>PDH Disaggregations</strong>:<br />
-
-                                          <Table className={classes.table} aria-label="simple table"> */}
-                              {/* <TableHead>
-                                              <TableRow>
-                                                <TableCell>Disaggregations Name</TableCell>
-                                                <TableCell>Disaggregations Code</TableCell>
-                                              </TableRow>
-                                            </TableHead>
-                                            <TableBody>
-                                              {
-                                                Object.keys(Object(pdhDataElement.combos)).map(
-                                                  key => <TableRow key={Math.random()}>
-                                                    <TableCell component="th" scope="row">
-                                                      {Object(pdhDataElement.combos)[key].name}
-                                                    </TableCell>
-                                                    <TableCell component="th" scope="row">
-                                                      {Object(pdhDataElement.combos)[key].code}
-                                                    </TableCell>
-                                                  </TableRow>
-
-                                                )
-                                              }
-                                            </TableBody>
-                                          </Table>
-                                        </div>)}></Route>
-                                    </ExpansionPanelDetails>
-                                  </ExpansionPanel>
-                                )
-                              }
-
-                              return true;
-                            })
-                            }
-                          </div> */}
-
-
-                              {/* MOH row */}
-                              {/* <div className={MOH ? classes.compareRowColumn : classes.hide}>
-
-                            {datim.moh.length === 0 ? 'No matching MOH data element' : mohDataElements.map(mohDataElement => {
-                              if ((datim.moh).includes(mohDataElement.uid)) {
-                                return (
-                                  <ExpansionPanel className={classes.expandPanel} key={Math.random()}>
-                                    <ExpansionPanelSummary
-                                      expandIcon={<ExpandMoreIcon />}
-                                      aria-controls="panel3b-content"
-                                      id="panel3b-header"
-
-                                    >
-                                      <div className={classes.compareCardSummary}>
-                                        <div className={classes.compareCardText}>MOH Data Element: </div>
-                                        <div className={classes.compareCardName}>{mohDataElement.name}</div>
-                                        <div className={classes.compareCardText}>MOH Data Element UID: <strong>{mohDataElement.uid}</strong></div>
-                                        <div className={classes.compareCardText}>Derived Data Element? <strong>{mohDataElement.derived}</strong></div>
-                                      </div>
-                                    </ExpansionPanelSummary>
-                                    <ExpansionPanelDetails className={classes.panelDetail}>
-
-
-                                      <Route render={({ history }) => (
-                                        <div className={classes.tableContainer}>
-                                          {/* data element Disaggregations */}
-                              {/* <strong>MOH Disaggregations</strong>:<br />
-
-                                          <Table className={classes.table} aria-label="simple table">
-                                            <TableHead>
-                                              <TableRow>
-                                                <TableCell>Disaggregations Name</TableCell>
-                                                <TableCell>Disaggregations Code</TableCell>
-                                              </TableRow>
-                                            </TableHead>
-                                            <TableBody>
-                                              {
-                                                Object.keys(Object(mohDataElement.combos)).map(
-                                                  key => <TableRow key={Math.random()}>
-                                                    <TableCell component="th" scope="row">
-                                                      {Object(mohDataElement.combos)[key].name}
-                                                    </TableCell>
-                                                    <TableCell component="th" scope="row">
-                                                      {Object(mohDataElement.combos)[key].code}
-                                                    </TableCell>
-                                                  </TableRow>
-
-                                                )
-                                              }
-                                            </TableBody>
-                                          </Table>
-                                        </div>)}></Route>
-                                    </ExpansionPanelDetails>
-                                  </ExpansionPanel>
-                                )
-                              }
-
-                              return true;
-                            })
-                            }*/}
                             </div>
 
                           )
@@ -2804,15 +2582,6 @@ Compare selected data elements
                       }
                       {/* </ErrorBoundary> */}
                     </div>
-
-
-
-
-
-
-
-
-
                   </Grid>
 
 
@@ -2823,68 +2592,44 @@ Compare selected data elements
 
               <Drawer anchor="bottom" open={detailPanel.bottom} onClose={toggleDetailDrawer('bottom', false)}>
                 <Grid container className={classes.comparePanelContainer} justify="space-between">
-
-                  {/* <div className={classes.fixedTop}> */}
-
-                  {/* <Grid container alignItems="center" justify="space-between"> */}
+                  {setShowLinked(false)}
                   <Grid item xs={6}  >
                     <h2 className={classes.comparisonPanelTitle}>DATA ELEMENT DETAILS</h2>
                   </Grid>
                   <Grid item xs={6}  >
                     <CloseIcon onClick={toggleDetailDrawer(dataElementDetail, 'bottom', false)} className={classes.closeComparePanel}>add_circle</CloseIcon>
                   </Grid>
-                  {/* </Grid> */}
-                  {/* comparison panel title */}
-                  {/* <Dialog fullScreen open={detailsOpen} onClose={handleDetailsClose} 
-                          TransitionComponent={Transition}
-                          >
-                            <AppBar className={classes.detailsDialogBar}>
-                              <Toolbar>
-                                <IconButton edge="start" color="inherit" onClick={handleDetailsClose} aria-label="close">
-                                  <CloseIcon />
-                                </IconButton>
-                              </Toolbar>
-                              </AppBar> */}
-                  {/* <Grid container alignItems="center" justify="space-between"> */}
                   <Grid item xs={6}  >
                     {dataElementDetail ?
                       <Table className={classes.comboTable} style={{ marginRight: '20px' }} aria-label="simple table">
                         <TableBody>
                           <TableRow>
                             <TableCell><strong>Short Name</strong></TableCell>
-                            <TableCell>{dataElementDetail.names[1] ? (dataElementDetail.names[1].name) : 'N/A'}</TableCell>
+                            <TableCell>{dataElementDetail.names[1] ? (dataElementDetail.names[1].name) : '--'}</TableCell>
                           </TableRow>
                           <TableRow>
                             <TableCell><strong>Code</strong></TableCell>
-                            <TableCell>{dataElementDetail.names[2] ? (dataElementDetail.names[2].name) : 'N/A'}</TableCell>
+                            <TableCell>{dataElementDetail.names[2] ? (dataElementDetail.names[2].name) : '--'}</TableCell>
                           </TableRow>
                           <TableRow className={classes.comboTable}>
                             <TableCell><strong>Description</strong></TableCell>
-                            <TableCell>{(dataElementDetail.descriptions) ? dataElementDetail.descriptions[0].description : "N/A"}</TableCell>
+                            <TableCell>{(dataElementDetail.descriptions) ? dataElementDetail.descriptions[0].description : "--"}</TableCell>
                           </TableRow>
-                          {/* <TableRow>
-                                <TableCell><strong>UID</strong></TableCell>
-                                <TableCell>{dataElement.id ? (dataElement.id) : 'N/A'}</TableCell>
-                              </TableRow> */}
-                          {/* <TableRow>
-                                <TableCell><strong>Source</strong></TableCell>
-                                <TableCell>{dataElement.extras.source ? (dataElement.extras.source) : 'N/A'}</TableCell>
-                              </TableRow> */}
                           <TableRow>
                             <TableCell><strong>Data Type</strong></TableCell>
-                            <TableCell>{dataElementDetail.datatype ? (dataElementDetail.datatype) : 'N/A'}</TableCell>
+                            <TableCell>{dataElementDetail.datatype ? (dataElementDetail.datatype) : '--'}</TableCell>
                           </TableRow>
                           <TableRow>
                             <TableCell><strong>Domain Type</strong></TableCell>
-                            <TableCell>{dataElementDetail.extras.domainType ? (dataElementDetail.extras.domainType) : 'N/A'}</TableCell>
+                            <TableCell>{dataElementDetail.extras.domainType ? (dataElementDetail.extras.domainType) : '--'}</TableCell>
                           </TableRow>
                           <TableRow>
                             <TableCell><strong>Value Type</strong></TableCell>
-                            <TableCell>{dataElementDetail.extras.valueType ? (dataElementDetail.extras.valueType) : 'N/A'}</TableCell>
+                            <TableCell>{dataElementDetail.extras.valueType ? (dataElementDetail.extras.valueType) : '--'}</TableCell>
                           </TableRow>
                           <TableRow>
                             <TableCell><strong>Aggregation Type</strong></TableCell>
-                            <TableCell>{dataElementDetail.extras.aggregationType ? (dataElementDetail.extras.aggregationType) : 'N/A'}</TableCell>
+                            <TableCell>{dataElementDetail.extras.aggregationType ? (dataElementDetail.extras.aggregationType) : '--'}</TableCell>
                           </TableRow>
                           <TableRow>
                             <TableCell><strong>Applicable Periods</strong></TableCell>
@@ -2897,13 +2642,29 @@ Compare selected data elements
                                     dataElementDetail.extras['Applicable Periods'][key] + ", "
 
                                 )
-                                ) : 'N/A') : 'N/A'
+                                ) : '--') : '--'
                               }
                             </TableCell>
                           </TableRow>
                           <TableRow>
+                            <TableCell><strong>Code List Membership</strong></TableCell>
+                            <TableCell>
+                              {
+                                dataElementDetail.extras.codelists ? (dataElementDetail.extras.codelists.length > 0 ? (Object.keys(dataElementDetail.extras.codelists).map(
+
+                                  key =>
+
+                                    dataElementDetail.extras.codelists[key].name + ", "
+
+                                )
+                                ) : '--') : '--'
+                              }
+                            </TableCell>
+                          </TableRow>
+                          <TableRow></TableRow>
+                          <TableRow>
                             <TableCell><strong>Result/Target</strong></TableCell>
-                            <TableCell>{dataElementDetail.extras.resultTarget ? dataElementDetail.extras.resultTarget : 'N/A'}</TableCell>
+                            <TableCell>{dataElementDetail.extras.resultTarget ? dataElementDetail.extras.resultTarget : '--'}</TableCell>
                           </TableRow>
                         </TableBody>
                       </Table> : ''}
@@ -2940,31 +2701,36 @@ Compare selected data elements
                         </div>
 
                       </div>
-                      <div style={{ padding: '20px', marginLeft: '170px' }}>or select a linked data element below</div>
+                      {showLinked ? <div style={{ padding: '20px', marginLeft: '170px' }}>or select a linked data element below</div> : ''}
                     </div>
                     <div>
                       <Table className={classes.comboTable} style={{ marginLeft: '20px', maxWidth: '700px' }} aria-label="simple table">
                         <TableBody>
-                          <TableRow>
-                            <TableCell><strong>Linked Resources</strong></TableCell>
-                            <TableCell></TableCell>
-                          </TableRow>
+
+                          {showLinked ?
+                            <TableRow>
+                              <TableCell><strong>Linked Resources</strong></TableCell>
+                              <TableCell></TableCell>
+                            </TableRow> : ''}
 
                           {dataElementDetail ? (
                             (deMappings[dataElementDetail.id]) ? Object.keys(Object(deMappings[dataElementDetail.id])).map(
 
                               function (key) {
                                 if (deMappings[dataElementDetail.id][key].map_type === "Derived From") {
+                                  setShowLinked(true)
                                   let name = ''
                                   let code = ''
                                   let source = ''
                                   let type = ''
+                                  let derives = ''
                                   if (deMappings[dataElementDetail.id][key].to_concept_code !== dataElementDetail.id) {
                                     name = Object(deMappings[dataElementDetail.id])[key].to_concept_name
                                     code = deMappings[dataElementDetail.id][key].to_concept_code
-                                    if(de[deMappings[dataElementDetail.id][key].to_concept_code]){
-                                    source = de[deMappings[dataElementDetail.id][key].to_concept_code].extras.source
-                                    type = de[deMappings[dataElementDetail.id][key].to_concept_code].concept_class
+                                    derives = 'Derived From'
+                                    if (de[deMappings[dataElementDetail.id][key].to_concept_code]) {
+                                      source = de[deMappings[dataElementDetail.id][key].to_concept_code].extras.source
+                                      type = de[deMappings[dataElementDetail.id][key].to_concept_code].concept_class
                                     }
                                   }
                                   else {
@@ -2978,6 +2744,77 @@ Compare selected data elements
                                     code = de[derivationId].id
                                     source = de[derivationId].extras.source
                                     type = de[derivationId].concept_class
+                                    derives = 'Derived To'
+                                    console.log(name + code + source + type)
+                                  }
+                                  return (
+                                    <TableRow>
+
+                                      <TableCell component="th" scope="row" style={{ maxWidth: '300px' }}>
+                                        <Grid container alignItems="center"
+                                          //justify="space-between"
+                                          spacing={2}>
+                                          <Grid item xs={12}  >
+                                            <strong>{derives}</strong>
+                                          </Grid>
+                                          <Grid item xs={12}  >
+                                            {name}
+                                          </Grid>
+                                          <Grid item xs={4} md={4} >
+                                            <span className={classes.chip}
+                                              onClick={() => copyToClipboard(code)}
+                                            >{"UID: " + code}</span></Grid>
+                                          <Grid item xs={4} md={4} >
+                                            <span className={classes.chip}
+                                            >{"Source: " + source}</span></Grid>
+                                          <Grid item xs={4} md={4} >
+                                            <span className={classes.chip}
+                                            >{"Type: " + type}</span>                                            </Grid>
+                                        </Grid>
+                                      </TableCell>
+                                      <TableCell component="th" scope="row" style={{ alignItems: 'left' }}>
+                                        <Button type="button" className={classes.margin} aria-label="search" onClick={() => performCompare(dataElementDetail, code)} variant="outlined" >
+                                          COMPARE
+                                    </Button>
+                                      </TableCell>
+                                    </TableRow>
+                                  )
+                                }
+                              }) : ''
+                          ) : ''
+                          }
+
+                          {dataElementDetail ? (
+                            (deMappings[dataElementDetail.id]) ? Object.keys(Object(deMappings[dataElementDetail.id])).map(
+
+                              function (key) {
+                                if (deMappings[dataElementDetail.id][key].map_type === "Replaces") {
+                                  let name = ''
+                                  let code = ''
+                                  let source = ''
+                                  let type = ''
+                                  let replaces = ''
+                                  if (deMappings[dataElementDetail.id][key].to_concept_code !== dataElementDetail.id) {
+                                    name = Object(deMappings[dataElementDetail.id])[key].to_concept_name
+                                    code = deMappings[dataElementDetail.id][key].to_concept_code
+                                    replaces = 'Replaces'
+                                    if (de[deMappings[dataElementDetail.id][key].to_concept_code]) {
+                                      source = de[deMappings[dataElementDetail.id][key].to_concept_code].extras.source
+                                      type = de[deMappings[dataElementDetail.id][key].to_concept_code].concept_class
+                                    }
+                                  }
+                                  else {
+                                    let from_concept_url = deMappings[dataElementDetail.id][key].from_concept_url
+                                    if (from_concept_url.endsWith('/')) {
+                                      from_concept_url = from_concept_url.substring(0, from_concept_url.length - 1)
+                                    }
+                                    let arr = from_concept_url.split('/')
+                                    let derivationId = arr[arr.length - 1]
+                                    name = de[derivationId].display_name
+                                    code = de[derivationId].id
+                                    source = de[derivationId].extras.source
+                                    type = de[derivationId].concept_class
+                                    replaces = 'Replaced By'
                                     console.log(name + code + source + type)
                                   }
                                   return (
@@ -2987,32 +2824,21 @@ Compare selected data elements
                                           //justify="space-between"
                                           spacing={2}>
                                           <Grid item xs={12}  >
+                                            <strong>{replaces}</strong>
+                                          </Grid>
+                                          <Grid item xs={12}  >
                                             {name}
                                           </Grid>
-                                          <Grid item xs={3}  >
-                                            <Chip
-                                              variant="outlined"
-                                              size="small"
-                                              style={{ marginTop: '10px' }}
-                                              label={"UID: " + code}
-                                              clickable
-                                            /></Grid>
-                                          <Grid item xs={3}  >
-                                            <Chip
-                                              variant="outlined"
-                                              size="small"
-                                              style={{ marginTop: '10px', marginLeft: '15px', backgroundColor: '#d8ebe0' }}
-                                              label={"Source: " + source}
-                                              clickable
-                                            /></Grid>
-                                          <Grid item xs={3}  >
-                                            <Chip
-                                              variant="outlined"
-                                              size="small"
-                                              style={{ marginTop: '10px', marginLeft: '15px', backgroundColor: '#c0b3c7' }}
-                                              label={"Type: " + type}
-                                              clickable
-                                            /></Grid>
+                                          <Grid item xs={4} md={4} >
+                                            <span className={classes.chip}
+                                              onClick={() => copyToClipboard(code)}
+                                            >{"UID: " + code}</span></Grid>
+                                          <Grid item xs={4} md={4} >
+                                            <span className={classes.chip}
+                                            >{"Source: " + source}</span></Grid>
+                                          <Grid item xs={4} md={4} >
+                                            <span className={classes.chip}
+                                            >{"Type: " + type}</span></Grid>
                                         </Grid>
                                       </TableCell>
                                       <TableCell component="th" scope="row" style={{ alignItems: 'left' }}>

@@ -1,9 +1,9 @@
+/* eslint-disable */
 import React, { useState, useEffect } from 'react';
 import Grid from '@material-ui/core/Grid';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
-import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import { makeStyles } from '@material-ui/core/styles';
 import Dialog from '@material-ui/core/Dialog';
@@ -15,13 +15,12 @@ import IconButton from '@material-ui/core/IconButton';
 import ExpansionPanel from '@material-ui/core/ExpansionPanel';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import Typography from '@material-ui/core/Typography';
 import CloseIcon from '@material-ui/icons/Close';
-import { Route, NavLink } from 'react-router-dom';
 import Button from '@material-ui/core/Button';
 import { getConfig } from '../config.js';
 import { useHistory, useLocation } from "react-router";
+import LinearProgress from '@material-ui/core/LinearProgress';
 
 const useStyles = makeStyles(theme => ({
   margin: {
@@ -477,7 +476,6 @@ export default function Compare() {
   let deMappings = {}
   let de = {}
   let dataElements = {}
-  let valuesExist = false
   const [selectedDatim, setSelectedDatim] = React.useState([])
   const [mappings, setMappings] = React.useState([])
   const [dataElementMatrix, setDataElementMatrix] = React.useState({})
@@ -501,101 +499,101 @@ export default function Compare() {
         value => {
           if (dataElements['Short Name']) {
             let shortNames = Array.from(dataElements['Short Name'])
-            shortNames.push(value.names[1] ? (value.names[1].name) : "N/A")
+            shortNames.push(value.names[1] ? (value.names[1].name) : "--")
             dataElements['Short Name'] = shortNames
           } else {
             let shortNames = []
-            shortNames.push(value.names[1] ? (value.names[1].name) : "N/A")
+            shortNames.push(value.names[1] ? (value.names[1].name) : "--")
             dataElements['Short Name'] = shortNames
           }
           if (dataElements['Code']) {
             let codes = Array.from(dataElements['Code'])
-            codes.push(value.names[2] ? (value.names[2].name) : "N/A")
+            codes.push(value.names[2] ? (value.names[2].name) : "--")
             dataElements['Code'] = codes
           } else {
             let codes = []
-            codes.push(value.names[2] ? (value.names[2].name) : "N/A")
+            codes.push(value.names[2] ? (value.names[2].name) : "--")
             dataElements['Code'] = codes
           }
           if (dataElements['Description']) {
             let descriptions = Array.from(dataElements['Description'])
-            descriptions.push(value.descriptions ? value.descriptions[0].description : "N/A")
+            descriptions.push(value.descriptions ? value.descriptions[0].description : "--")
             dataElements['Description'] = descriptions
           } else {
             let descriptions = []
-            descriptions.push(value.descriptions ? value.descriptions[0].description : "N/A")
+            descriptions.push(value.descriptions ? value.descriptions[0].description : "--")
             dataElements['Description'] = descriptions
           }
           if (dataElements['UID']) {
             let ids = Array.from(dataElements['UID'])
-            ids.push(value.id ? value.id : "N/A")
+            ids.push(value.id ? value.id : "--")
             dataElements['UID'] = ids
           } else {
             let ids = []
-            ids.push(value.id ? value.id : "N/A")
+            ids.push(value.id ? value.id : "--")
             dataElements['UID'] = ids
           }
           if (dataElements['Source']) {
             let ids = Array.from(dataElements['Source'])
-            ids.push(value.extras ? value.extras.source : "N/A")
+            ids.push(value.extras ? value.extras.source : "--")
             dataElements['Source'] = ids
           } else {
             let ids = []
-            ids.push(value.extras ? value.extras.source : "N/A")
+            ids.push(value.extras ? value.extras.source : "--")
             dataElements['Source'] = ids
           }
           if (dataElements['Type']) {
             let ids = Array.from(dataElements['Type'])
-            ids.push(value.concept_class ? value.concept_class : "N/A")
+            ids.push(value.concept_class ? value.concept_class : "--")
             dataElements['Type'] = ids
           } else {
             let ids = []
-            ids.push(value.concept_class ? value.concept_class : "N/A")
+            ids.push(value.concept_class ? value.concept_class : "--")
             dataElements['Type'] = ids
           }
           if (dataElements['Indicator']) {
             let ids = Array.from(dataElements['Indicator'])
-            ids.push(value.extras.indicator ? value.extras.indicator : "N/A")
+            ids.push(value.extras.indicator ? value.extras.indicator : "--")
             dataElements['Indicator'] = ids
           } else {
             let ids = []
-            ids.push(value.extras.indicator ? value.extras.indicator : "N/A")
+            ids.push(value.extras.indicator ? value.extras.indicator : "--")
             dataElements['Indicator'] = ids
           }
           if (dataElements['Data Type']) {
             let types = Array.from(dataElements['Data Type'])
-            types.push(value.datatype ? value.datatype : "N/A")
+            types.push(value.datatype ? value.datatype : "--")
             dataElements['Data Type'] = types
           } else {
             let types = []
-            types.push(value.datatype ? value.datatype : "N/A")
+            types.push(value.datatype ? value.datatype : "--")
             dataElements['Data Type'] = types
           }
           if (dataElements['Domain Type']) {
             let types = Array.from(dataElements['Domain Type'])
-            types.push(value.extras.domainType ? value.extras.domainType : "N/A")
+            types.push(value.extras.domainType ? value.extras.domainType : "--")
             dataElements['Domain Type'] = types
           } else {
             let types = []
-            types.push(value.extras.domainType ? value.extras.domainType : "N/A")
+            types.push(value.extras.domainType ? value.extras.domainType : "--")
             dataElements['Domain Type'] = types
           }
           if (dataElements['Value Type']) {
             let types = Array.from(dataElements['Value Type'])
-            types.push(value.extras.valueType ? value.extras.valueType : "N/A")
+            types.push(value.extras.valueType ? value.extras.valueType : "--")
             dataElements['Value Type'] = types
           } else {
             let types = []
-            types.push(value.extras.valueType ? value.extras.valueType : "N/A")
+            types.push(value.extras.valueType ? value.extras.valueType : "--")
             dataElements['Value Type'] = types
           }
           if (dataElements['Aggregation Type']) {
             let types = Array.from(dataElements['Aggregation Type'])
-            types.push(value.extras.aggregationType ? value.extras.aggregationType : "N/A")
+            types.push(value.extras.aggregationType ? value.extras.aggregationType : "--")
             dataElements['Aggregation Type'] = types
           } else {
             let types = []
-            types.push(value.extras.aggregationType ? value.extras.aggregationType : "N/A")
+            types.push(value.extras.aggregationType ? value.extras.aggregationType : "--")
             dataElements['Aggregation Type'] = types
           }
           if (dataElements['Applicable Periods']) {
@@ -608,7 +606,7 @@ export default function Compare() {
                   value.extras['Applicable Periods'][key] + ", "
 
               )
-              ) : "N/A") : "N/A")
+              ) : "--") : "--")
               dataElements['Applicable Periods'] = types
           } else {
             let types = []
@@ -620,7 +618,7 @@ export default function Compare() {
                   value.extras['Applicable Periods'][key] + ", "
 
               )
-              ) : "N/A") : "N/A")
+              ) : "--") : "--")
             dataElements['Applicable Periods'] = types
           }
           if (dataElements['Display Name']) {
@@ -655,6 +653,13 @@ export default function Compare() {
   const table = function () {
     //!deMappings[datim.id] ? getMappings(datim.id) : ''
     return (
+      <div className={classes.compareRowColumn}>
+      { deloading ?
+                    <div>
+                        <LinearProgress mode="indeterminate" />
+                        <div style={{ paddingTop: '1rem', paddingLeft: '1rem' }}>Loading data elements ...</div>
+                    </div> :
+                    (
       <div className={classes.compareRowColumn} key={Math.random()}>
         <ExpansionPanel className={classes.expandPanel}>
           <ExpansionPanelSummary
@@ -746,61 +751,18 @@ export default function Compare() {
           <ExpansionPanelDetails className={classes.panelDetail}>
 
 
-          {/* <div className={classes.tableContainer} key={Math.random()}>
-                             <strong>Disaggregations</strong>:<br />
-
-                           <Table className={classes.table} aria-label="simple table">
-                              <TableHead>
-                                <TableRow>
-                                  <TableCell></TableCell>
-                                  <TableCell>
-                                   <TableCell>Name</TableCell>
-                                  <TableCell>Code</TableCell>
-                                  </TableCell>
-                                  <TableCell>
-                                   <TableCell>Name</TableCell>
-                                  <TableCell>Code</TableCell>
-                                  </TableCell>
-                                 </TableRow>
-                           </TableHead>
-                               <TableBody >
-                               <TableRow><TableCell style={{width: '100px'}}></TableCell>
-                               {Object.values(de).map(datim => 
-                                <TableCell>
-                                  {(mappings[datim.id]) ? Object.keys(Object(mappings[datim.id])).map(
-
-                                    key =>
-                                   
-                                      {Object(mappings[datim.id])[key].map_type === 'Has Option' ? (
-                                        <TableRow key={Math.random()}>
-                                          <TableCell component="th" scope="row">
-                                            {Object(mappings[datim.id])[key].to_concept_name}
-                                          </TableCell>
-                                          <TableCell component="th" scope="row">
-                                            {Object(mappings[datim.id])[key].to_concept_code}
-                                          </TableCell>
-                                        </TableRow>
-                                      ) : ''}
-                                      
-                                  ) : ''}
-                                  </TableCell>
-                               )}
-                                </TableRow>
-                              </TableBody>
-                            </Table>
-                          </div> */}
-
-
           </ExpansionPanelDetails>
         </ExpansionPanel>
       </div>
+                    ) }
+                    </div>
     )
   }
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [dialogMessage, setDialogMessage] = React.useState('');
   const [errorDisplay, setErrorDisplay] = useState(null)
   const [error, setError] = useState(null)
-
+  const [deloading, setDELoading] = useState(false);
 
   const sortJSONByKey = function (data, key, direction) {
     return data.sort(function (a, b) {
@@ -817,7 +779,7 @@ export default function Compare() {
 
   const goBack = () => {
     if (params.get('dataElementDetail')) {
-      history.push('/codelist?dataElementid=' + params.get('id1'))
+      history.push('/dataElementDetail?id=' + params.get('id1'))
     } else {
       history.goBack()
     }
@@ -906,7 +868,7 @@ export default function Compare() {
   // render() {
 
   async function getMappings(id) {
-    //setExpanded(true);
+    setDELoading(true)
     let queryMapping = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + version + '/concepts/' + id + '/?includeMappings=true&includeInverseMappings=true';
     console.log(" queryByDataElement " + queryMapping)
 
@@ -928,40 +890,41 @@ export default function Compare() {
       if (!de[id]) {
         de[id] = jsonData
       }
+      setDELoading(false)
       // if the data element has linkages, retrieve those as well
-      Object.keys(Object(deMappings[id])).map(
+      // Object.keys(Object(deMappings[id])).map(
 
-        async function (key) {
-          if (Object(deMappings[id])[key].map_type === 'Derived From') {
-            const derivationId = Object(deMappings[id])[key].to_concept_code
-            if (derivationId === id) {
-              let from_concept_url = Object(deMappings[id])[key].from_concept_url
-              if (from_concept_url.endsWith('/')) {
-                from_concept_url = from_concept_url.substring(0, from_concept_url.length - 1)
-              }
-              let arr = from_concept_url.split('/')
-              derivationId = arr[arr.length - 1]
-            }
-            if (!deMappings[derivationId]) {
-              queryMapping = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + version + '/concepts/' + derivationId + '/?includeMappings=true&includeInverseMappings=true';
-              response = await fetch(queryMapping);
-              if (!response.ok) {
-                console.log(response);
-                setErrorDisplay("Failed to fetch")
-                throw new Error(
-                  `Error when retrieving data element mappings for ${derivationId} ${response.status} ${response.statusText}`
-                );
-              }
-              jsonData = await response.json()
-              sortedData = sortJSONByKey(jsonData.mappings, 'to_concept_name', 'asc');
-              deMappings[derivationId] = sortedData
-              if (!de[derivationId]) {
-                de[derivationId] = jsonData
-              }
-            }
-          }
-        }
-      )
+      //   async function (key) {
+      //     if (Object(deMappings[id])[key].map_type === 'Derived From') {
+      //       const derivationId = Object(deMappings[id])[key].to_concept_code
+      //       if (derivationId === id) {
+      //         let from_concept_url = Object(deMappings[id])[key].from_concept_url
+      //         if (from_concept_url.endsWith('/')) {
+      //           from_concept_url = from_concept_url.substring(0, from_concept_url.length - 1)
+      //         }
+      //         let arr = from_concept_url.split('/')
+      //         derivationId = arr[arr.length - 1]
+      //       }
+      //       if (!deMappings[derivationId]) {
+      //         queryMapping = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + version + '/concepts/' + derivationId + '/?includeMappings=true&includeInverseMappings=true';
+      //         response = await fetch(queryMapping);
+      //         if (!response.ok) {
+      //           console.log(response);
+      //           setErrorDisplay("Failed to fetch")
+      //           throw new Error(
+      //             `Error when retrieving data element mappings for ${derivationId} ${response.status} ${response.statusText}`
+      //           );
+      //         }
+      //         jsonData = await response.json()
+      //         sortedData = sortJSONByKey(jsonData.mappings, 'to_concept_name', 'asc');
+      //         deMappings[derivationId] = sortedData
+      //         if (!de[derivationId]) {
+      //           de[derivationId] = jsonData
+      //         }
+      //       }
+      //     }
+      //   }
+      // )
     } catch (e) {
       console.log("error:" + e.message);
       setError(e.message);
@@ -984,12 +947,6 @@ export default function Compare() {
                 id="backButton"> Back</Button>
               {/* </NavLink> */}
               <h2 className={classes.comparisonPanelTitle}>DATA ELEMENT COMPARISON</h2>
-              {/* comparison panel title */}
-              {/* <div className={classes.compareTitle}>
-                  {DATIM ? <div className={classes.compareTitleColumn}>DATIM</div> : ''}
-                  {PDH ? <div className={classes.compareTitleColumn}>PDH</div> : ''}
-                  {MOH ? <div className={classes.compareTitleColumn}>MOH</div> : ''}
-                </div> */}
           </div>
           {errorDisplay !== null ?
             <div className={classes.errorMessage}>{errorDisplay}</div>
@@ -1001,138 +958,6 @@ export default function Compare() {
 
             {
               table()
-              // selectedDatim.map(datim => {
-              //   !deMappings[datim.id] ? getMappings(datim.id) : ''
-              //   return (
-              //     <div className={classes.compareRowColumn} key={Math.random()}>
-              //       <div className={classes.fixedTop}>
-              //         {/* <div className={classes.compareCardSummary}> */}
-              //         <div className={classes.compareTitle}>
-              //           {/* <div className={classes.compareCardText}>DATIM Data Element: </div> */}
-              //           <div className={classes.compareTitleColumn}>{datim.display_name}</div>
-              //           {/* <div className={classes.compareCardText}>DATIM UID: <strong>{datim.external_id}</strong></div> */}
-              //         </div>
-              //       </div>
-              //       <ExpansionPanel className={classes.expandPanel}>
-              //         <ExpansionPanelSummary
-              //           expandIcon={<ExpandMoreIcon />}
-              //           aria-controls="panel3b-content"
-              //           id="panel3b-header"
-              //           onClick={() => !deMappings[datim.id] ? getMappings(datim.id) : ''}
-              //         >
-
-              //           <Table className={classes.comboTable} aria-label="simple table">
-              //             <TableBody>
-              //               <TableRow>
-              //                 <TableCell><strong>Short Name</strong></TableCell>
-              //                 <TableCell>{datim.names[1] ? (datim.names[1].name) : "N/A"}</TableCell>
-              //               </TableRow>
-              //               <TableRow>
-              //                 <TableCell><strong>Code</strong></TableCell>
-              //                 <TableCell>{datim.names[2] ? (datim.names[2].name) : "N/A"}</TableCell>
-              //               </TableRow>
-              //               <TableRow className={classes.comboTable}>
-              //                 <TableCell><strong>Description</strong></TableCell>
-              //                 <TableCell>{(datim.descriptions) ? datim.descriptions[0].description : "N/A"}</TableCell>
-              //               </TableRow>
-              //               <TableRow>
-              //                 <TableCell><strong>UID</strong></TableCell>
-              //                 <TableCell>{datim.id ? (datim.id) : "N/A"}</TableCell>
-              //               </TableRow>
-              //               <TableRow>
-              //                 <TableCell><strong>Source</strong></TableCell>
-              //                 <TableCell>{datim.extras.source ? (datim.extras.source) : "N/A"}</TableCell>
-              //               </TableRow>
-              //               <TableRow>
-              //                 <TableCell><strong>Data Type</strong></TableCell>
-              //                 <TableCell>{datim.datatype ? (datim.datatype) : "N/A"}</TableCell>
-              //               </TableRow>
-              //               <TableRow>
-              //                 <TableCell><strong>Domain Type</strong></TableCell>
-              //                 <TableCell>{datim.extras.domainType ? (datim.extras.domainType) : "N/A"}</TableCell>
-              //               </TableRow>
-              //               <TableRow>
-              //                 <TableCell><strong>Value Type</strong></TableCell>
-              //                 <TableCell>{datim.extras.valueType ? (datim.extras.valueType) : "N/A"}</TableCell>
-              //               </TableRow>
-              //               <TableRow>
-              //                 <TableCell><strong>Aggregation Type</strong></TableCell>
-              //                 <TableCell>{datim.extras.aggregationType ? (datim.extras.aggregationType) : "N/A"}</TableCell>
-              //               </TableRow>
-              //               <TableRow>
-              //                 <TableCell><strong>Applicable Periods</strong></TableCell>
-              //                 <TableCell>
-              //                   {
-              //                     datim.extras['Applicable Periods'] ? (datim.extras['Applicable Periods'].length > 0 ? (Object.keys(datim.extras['Applicable Periods']).map(
-
-              //                       key =>
-
-              //                         datim.extras['Applicable Periods'][key] + ", "
-
-              //                     )
-              //                     ) : "N/A") : "N/A"
-              //                   }
-              //                 </TableCell>
-              //               </TableRow>
-              //               <TableRow>
-              //                 <TableCell><strong>Result/Target</strong></TableCell>
-              //                 <TableCell>{datim.extras.resultTarget ? datim.extras.resultTarget : "N/A"}</TableCell>
-              //               </TableRow>
-              //             </TableBody>
-              //           </Table>
-
-              //           {/* <div className={`${classes.heroContainer} ${classes.compareRowColumn}`}>
-              //   Description: {(datim.descriptions) ? datim.descriptions[0].description : "Not Available"}<br />
-
-              // </div> */}
-              //         </ExpansionPanelSummary>
-              //         <ExpansionPanelDetails className={classes.panelDetail}>
-
-
-              //           <Route render={({ history }) => (
-              //             <div className={classes.tableContainer} key={Math.random()}>
-              //               {/* data element Disaggregations */}
-              //               <strong>Disaggregations</strong>:<br />
-
-              //               <Table className={classes.table} aria-label="simple table">
-              //                 <TableHead>
-              //                   <TableRow>
-              //                     <TableCell>Name</TableCell>
-              //                     <TableCell>Code</TableCell>
-              //                   </TableRow>
-              //                 </TableHead>
-              //                 <TableBody >
-              //                   {
-              //                     (mappings[datim.id]) ? Object.keys(Object(mappings[datim.id])).map(
-
-              //                       key =>
-              //                         Object(mappings[datim.id])[key].map_type === 'Has Option' ? (
-              //                           <TableRow key={Math.random()}>
-              //                             <TableCell component="th" scope="row">
-              //                               {Object(mappings[datim.id])[key].to_concept_name}
-              //                             </TableCell>
-              //                             <TableCell component="th" scope="row">
-              //                               {Object(mappings[datim.id])[key].to_concept_code}
-              //                             </TableCell>
-              //                           </TableRow>
-              //                         ) : ''
-              //                     ) : ''
-              //                   }
-              //                 </TableBody>
-              //               </Table>
-              //             </div>
-              //           )}></Route>
-              //         </ExpansionPanelDetails>
-              //       </ExpansionPanel>
-              //       <Grid container >
-              //         <div></div>
-              //       </Grid>
-              //       {/* </div> */}
-              //     </div>
-
-              //   )
-
-              // })
             }
 
           </div>

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, {useState, useEffect } from 'react';
 import * as headings from '../Styles/Text';
 import styled from 'styled-components';
@@ -27,10 +28,17 @@ import InputLabel from '@material-ui/core/InputLabel';
 import Chip from '@material-ui/core/Chip';
 import Button from '@material-ui/core/Button';
 import Switch from '@material-ui/core/Switch';
+import Tooltip from '@material-ui/core/Tooltip';
+import Popover from '@material-ui/core/Popover';
+import FormLabel from '@material-ui/core/FormLabel';
+import FormGroup from '@material-ui/core/FormGroup';
+import Radio from '@material-ui/core/Radio';
+import RadioGroup from '@material-ui/core/RadioGroup';
 
 import LinearProgress from '@material-ui/core/LinearProgress';
 import TablePagination from '@material-ui/core/TablePagination';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import GetAppIcon from '@material-ui/icons/GetApp';
 
 
 import FormControl from '@material-ui/core/FormControl';
@@ -43,6 +51,7 @@ import {getCodeListMap} from '../currentCodelist.js'
 import ReferenceIndicatorDetail from './ReferenceIndicatorDetail';
 import DataElementDetail from './DataElementDetail';
 import Shortcut from './Shortcut';
+import DatimIndicator from './DatimIndicator';
 
 
 //tab panel function
@@ -163,14 +172,15 @@ const useStyles = makeStyles(theme => ({
   filterContainer: {
     display: 'flex',
     flexGrow: 1,
-    paddingBottom: '20px',
+    paddingBottom: '0',
     flexDirection: 'column'
   },
   filter: {
     paddingLeft: '20px',
     paddingRight: '20px',
-    minHeight: '50px',
-    marginBottom:'1em'
+    minHeight: '20px',
+    marginBottom:'0',
+    paddingBottom: '0'
   },
   searchForm:{
     display: 'flex',
@@ -234,7 +244,7 @@ const useStyles = makeStyles(theme => ({
     borderBottom: '1px solid #C1A783',
   },
   expansionPanelDetails:{
-    paddingTop: '30px'
+    paddingTop: '10px'
   },
   comboTable:{
     boxShadow: 'none',
@@ -242,11 +252,13 @@ const useStyles = makeStyles(theme => ({
     maxWidth: '100%',
   },
   expansionPanelLeft:{
-    paddingBottom: '30px'
+    paddingBottom: '20px'
   },
   chip:{
-    marginTop: '10px', 
-    color: '#4e4f4f' 
+    marginTop: '1px', 
+    color: '#333333' ,
+   /* backgroundColor: '#ffffff',*/
+    fontSize: '12px'
   },
   filterButton:{
     marginBottom: '20px',
@@ -259,7 +271,7 @@ const useStyles = makeStyles(theme => ({
   },
   detailsButton: {
     marginTop: '10px',
-    marginBottom: '20px',
+    marginBottom: '0px',
     '&:hover, &:focus': {
       backgroundColor: '#C1A783',
       color: '#000000'
@@ -273,6 +285,16 @@ const useStyles = makeStyles(theme => ({
       color: '#000000'
     }
   },
+  actionButton: {
+    marginLeft: '10px',
+    marginRight: '20px',
+    marginTop: '12px',     
+    color: '#1D5893',
+    '&:hover, &:focus': {
+      backgroundColor: '#C1A783',
+     /* color: '#000000'*/
+    }
+  },
   formLegend:{
     color: 'rgba(0, 0, 0, 0.87)',
     fontSize: '1.2em',
@@ -281,40 +303,48 @@ const useStyles = makeStyles(theme => ({
   sidebar:{
     margin: '0em',
     marginRight: '2em'
-
   },
   sidebarTitle:{
     textAlign: 'center',
-    padding: '1em',
-    marginBottom: '0 !important'
+    paddingBottom: '10px',
+    marginBottom: '0 !important',
+    marginTop: '2px',
+    paddingTop: '10px'
   },
   sidebarExpandTitle:{
     fontSize: '1em',
     lineHeight:'1.4em',
     fontWeight: 'normal',
     color: '#000000',
-    margin: 0
+    margin: '0',
+    padding: '0'
+
   },
-  sidebarGroup:{
-    
+  sidebarGroup:{  
+    padding: '0',
+    marging: '0'
    },
    sidebarSubtitle:{
-    textAlign: 'center'
+    textAlign: 'center',    
    },
    indicatorList:{
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
+    paddingBottom: '2px'
    },
    indicatorListItem:{
-     paddingBottom: '1em',
-     cursor: 'pointer'
+     paddingBottom: '3px',
+     cursor: 'pointer',
+     '&:hover, &:focus':{   
+      backgroundColor: '#eeeeee'
+    }
    },
    indicatorListItemUnclickable:{
-    paddingBottom: '1em',
+    paddingBottom: '3px',
     cursor: 'default' 
   },
    indicatorListItemActive:{
-    paddingBottom: '1em',
+    paddingBottom: '3px',
     cursor: 'pointer',
     fontWeight:'bold'
   },
@@ -463,12 +493,13 @@ const useStyles = makeStyles(theme => ({
 
 
 
-  export default function Indicator() {
+  export default function ReferenceIndicator() {
     
     const [page, setPage] = React.useState(0);    
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
     var [count, setCountOfValues] = useState(0);
-    const handleChangePage = (event, newPage) => {      
+    const handleChangePage = (event, newPage) => {    
+      console.log("newPage :" + newPage);  
       setPage(newPage);
     };
 
@@ -477,7 +508,10 @@ const useStyles = makeStyles(theme => ({
       setPage(0);
       //setExpanded(false);
     };
-
+    const [pageDatimIndicator, setPageForDatimIndicator] = React.useState(0);           
+    const handleChangePageDatimIndicator = (event, newPage) => {         
+      setPageForDatimIndicator(newPage);
+    };
 
     let location = useLocation();          
     const classes = useStyles();
@@ -500,20 +534,34 @@ const useStyles = makeStyles(theme => ({
 
       const INDICATOR_PANEL = 0;
       const DATA_ELEMENT_PANEL = 1;
+      const DATIM_INDICATOR_PANEL = 2;
       
     //get indicator and data-elements from context
-    const [{ currentIndicator, matchDataElements }, dispatch] = useStateValue();
+    const [{ currentIndicator, matchDataElements, matchDatimIndicators }, dispatch] = useStateValue();
     
     //set initial panel state and panel handle change function
     const [panel, setPanel] = React.useState(INDICATOR_PANEL);
 
-    const handleChange = (event, newPanel) => {
-      setPanel(newPanel);      
+    const handleChange = (event, newPanel) => {     
+      setPage(0);
+      setPageForDatimIndicator(0);
+      setPanel(newPanel);            
+      setErrorLoadDataElement(null);
+      setErrorLoadDatimIndiator(null);
+      
       if (newPanel === DATA_ELEMENT_PANEL){       
+        console.log("load data elements, page: " + page);
         // reload data element
-        if (currentIndicator && currentIndicator.id !== '' && matchDataElements.length ===0){
-          updateIndicator(currentIndicator.id, DATA_ELEMENT_PANEL);
+        if (currentIndicator && currentIndicator.id !== '' /*&& matchDataElements.length ===0*/){
+          //updateIndicator(currentIndicator.id, DATA_ELEMENT_PANEL);
+          loadDataElementsDataByIndicator(currentIndicator.id);
         }        
+      }else if (newPanel === DATIM_INDICATOR_PANEL){       
+        console.log(currentIndicator);
+        setCountOfValues(0);      
+        if (currentIndicator && currentIndicator.id !== '' ){          
+          loadDatimIndicatorByIndicator(currentIndicator.id);
+        }
       }
     };
 
@@ -543,6 +591,40 @@ const useStyles = makeStyles(theme => ({
       setDetailPanel({ ...detailPanel, [side]: open });
     };
 
+
+    const performDownload = event => {    
+        const baseDownloadURL = "https://test.ohie.datim.org:5000/ocl-etl/msp";
+        let downloadURL = "";
+        console.log(matchDataElements);
+        let deIDs = [];
+        matchDataElements.map(item => {
+          //console.log(item);
+          if (item.id && item.id !== ""){
+            deIDs.push(item.id);
+          }
+        });
+      
+        if (deIDs.length > 0) {
+          downloadURL = baseDownloadURL + "?dataElements=" + deIDs.toString().trim() + "&format=" + downloadValue.trim();
+        }
+        let downloadLink = document.createElement('a');
+        downloadLink.href = downloadURL;
+        if (downloadValue.trim() !== "CSV") {
+          downloadLink.setAttribute("target", "_blank");
+        }
+        downloadLink.setAttribute('download', "download");
+        
+        downloadLink.click();
+        revokeDownloadLink(downloadLink.href);     
+    }
+
+    function revokeDownloadLink(href) {
+      console.log("Revoke method... ");
+      setTimeout(function () {
+        window.URL.revokeObjectURL(href);
+      }, 10000);
+    }
+  
     const getIndicatorGroup = function (indicatorData) {     
       //console.log( "filter value: " + values.fiscal + " freq:" + values.frequency );
       var filteredByYearData = indicatorData.filter(function (data) {                
@@ -555,6 +637,7 @@ const useStyles = makeStyles(theme => ({
         }        
         return true;
       });
+      console.log("filteredByYearData:"); console.log(filteredByYearData);
       const distinctGroup = [...new Set(filteredByYearData.map(item => item.group))];
       distinctGroup.sort();           
       return distinctGroup;      
@@ -621,12 +704,16 @@ const useStyles = makeStyles(theme => ({
     const [, setError] = useState(null);
     const [errorLoadDataElement, setErrorLoadDataElement] = useState(null);
     const [errorLoadIndicatorDetail, setErrorLoadIndicatorDetail] = useState(null);
+    const [errorLoadDatimIndiator, setErrorLoadDatimIndiator] = useState(null);
     const [indicatorsListForUI, setIndicatorsListForUI] = useState([] ); // contains indicators for all years
     const [filteredIndicatorsListForUI, setFilteredIndicatorsListForUI] = useState([] );
     const [indicatorGroups, setIndicatorGroups] = useState([] );
     const [indGrouploading, setIndGroupLoading] = useState(false);
     const [deloading, setDELoading] = useState(false);    
-    const [indicatorDetailLoading, setIndicatorDetailLoading] = useState(false);    
+    const [indicatorDetailLoading, setIndicatorDetailLoading] = useState(false); 
+    const [datimIndicatorLoading, setDatimIndicatorLoading] = useState(false);  
+    const [anchorEl, setAnchorEl] = React.useState(null);   
+    const [dropDownName, setDropDownName] = React.useState("");
     
     const loadIndicatorsAbortController = new window.AbortController(); 
     const loadDataElementsAbortController = new window.AbortController();   
@@ -656,7 +743,7 @@ const useStyles = makeStyles(theme => ({
         console.log(jsonData);
         var d = createIndicatorListForUI(jsonData);
         var sortedData = sortJSON(d, 'name', 'asc');
-        setIndicatorsListForUI (sortedData);
+        setIndicatorsListForUI(sortedData);
         setFilteredIndicatorsListForUI(sortedData);
        
         var indGroupTemp = getIndicatorGroup(d);        
@@ -673,11 +760,10 @@ const useStyles = makeStyles(theme => ({
     // for Data Elements tab to get a list of data elements and their disags for the indicatorID
     const loadDataElementsDataByIndicator = async (indicatorID)=> {      
       var query = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + source +  '/concepts/?verbose=true&q=' + indicatorID + '&conceptClass="Data+Element"&limit=' + rowsPerPage + '&page=' + (page+1);
-      console.log("loadDataElementsByIndicator: " + indicatorID + " query: " + query); 
-      
+      console.log("loadDataElementsByIndicator: " + indicatorID + " query: " + query);     
       setDELoading(true);
       setErrorLoadDataElement(null);
-      try {
+      try {       
         const response = await fetch(query, { signal: loadDataElementsAbortController.signal });
         if (!response.ok) {
           console.log(response);
@@ -704,14 +790,7 @@ const useStyles = makeStyles(theme => ({
         if (jsonData && Array.isArray(jsonData)){          
           mappedDataElements = jsonData.map(item => {
             //console.log(item);
-            var dataElementItem = {};
-            /*dataElementItem.source = item.extras.source;
-            dataElementItem.description = (item.descriptions && item.descriptions.length > 0 ) ? item.descriptions[0].description : ""; 
-            dataElementItem.uid = item.external_id;
-            dataElementItem.id = item.id;
-            dataElementItem.code = item.id;
-            dataElementItem.name = item.display_name;   
-            dataElementItem.extra = item.extra;*/
+            var dataElementItem = {};           
             dataElementItem = item;
             var deMappings = []; 
             const mappings = [];           
@@ -731,8 +810,7 @@ const useStyles = makeStyles(theme => ({
           })
         }                
         var sortedData = sortJSON(mappedDataElements, 'name', 'asc');  
-        setCountOfValues(parseInt(response.headers.get('num_found')));
-        console.log(response.headers.get('num_found') + " results found ")
+        setCountOfValues(parseInt(response.headers.get('num_found')));       
 
         dispatch({
           type: 'changeMatchDataElements',
@@ -748,6 +826,55 @@ const useStyles = makeStyles(theme => ({
           type: 'changeMatchDataElements',
           matchDataElements: []
         })
+      }
+      
+    }
+
+    const loadDatimIndicatorByIndicator = async (indicatorID)=> {       
+      const query = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + source +  '/concepts/?verbose=true&q=' + indicatorID + '&conceptClass="Indicator"&limit=' + rowsPerPage + '&page=' + (pageDatimIndicator+1);
+        
+      console.log("loadDatimIndicatorByIndicator: " + indicatorID + " query: " + query); 
+      setDatimIndicatorLoading(true);     
+      setErrorLoadDatimIndiator(null);
+      try {
+        const response = await fetch(query, { signal: loadDataElementsAbortController.signal });
+        if (!response.ok) {
+          console.log(response);
+          setDatimIndicatorLoading(false);
+          setCountOfValues(0);
+          throw new Error(
+            `Error when retrieve datim indicators ${response.status} ${response.statusText}`
+          );
+        }
+        const jsonData = await response.json();                
+        if (!jsonData) {
+          console.log("jsonData is empty");
+          setCountOfValues(0);
+          setDatimIndicatorLoading(false);
+          throw new Error(
+            `Warning datim indicator data is emtpy from OCL  ` + indicatorID
+          );
+        }
+        console.log("datim indicators : " + jsonData.length);
+        console.log(jsonData);
+        setDatimIndicatorLoading(false);                   
+        setCountOfValues(parseInt(response.headers.get('num_found')));
+        var sortedData = sortJSON(jsonData, 'display_name', 'asc'); 
+        
+        dispatch({
+          type: 'changeMatchDatimIndicators',
+          matchDatimIndicators: sortedData
+        })                
+      }catch (e){
+        console.log("error:" + e.message);        
+        setDatimIndicatorLoading(false);
+        setErrorLoadDatimIndiator("Error when get datim indicator for " + indicatorID + ". " + e.message);
+        // clear data elements
+        dispatch({
+          type: 'changeMatchDatimIndicators',
+          matchDatimIndicators: []
+        })
+        
       }
       
     }
@@ -871,7 +998,14 @@ const useStyles = makeStyles(theme => ({
           matchDataElements: []
         })
       }
-          
+      if (panel && panel === DATIM_INDICATOR_PANEL) {      
+        loadDatimIndicatorByIndicator(indicatorId);
+      }else {// clear daim indicator
+        dispatch({
+          type: 'changeMatchDatimIndicators',
+          matchDatimIndicators: []
+        })
+      } 
     }         
   }
 
@@ -919,6 +1053,23 @@ const useStyles = makeStyles(theme => ({
   const handleNavLinkChange = event => {
     setPage(0);
   }
+
+  //set dropdown popup
+  const dropDownMenu = buttonName => event => {
+    setAnchorEl(anchorEl ? null : event.currentTarget);  
+    setDropDownName(buttonName);
+  };
+  
+  const popOpen = Boolean(anchorEl);
+  const popId = popOpen ? 'popover' : undefined;
+  const popHandleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const [downloadValue, setDownloadValue] = React.useState('HTML');
+  const handleDownloadChange = event => {
+    setDownloadValue(event.target.value);
+  };
 
   //when value has changed, call useEffect function
   useEffect(() => {
@@ -1006,18 +1157,59 @@ const useStyles = makeStyles(theme => ({
     }
   };
 
+  let downloadIndicatorURL = "";
+  if (currentIndicator) {
+    downloadIndicatorURL = "https://api." + domain + "/orgs/" + org + "/sources/MER/concepts/" + currentIndicator.id + "/";
+  }
+
+  function getDEdetailValue(dataElement, field){
+    let value = "";
+    if (field === "description" && dataElement.descriptions && dataElement.descriptions[0] && dataElement.descriptions[0].description ){
+      value = dataElement.descriptions[0].description;
+    }else if (field === "shortName" && dataElement.names && dataElement.names[1]){
+      value = dataElement.names[1].name;
+    }else if (field === "code" && dataElement.names && dataElement.names[2]){
+      value = dataElement.names[2].name;
+    }else if (field === "indicator" && dataElement.extras && dataElement.extras.indicator  ){
+      value = dataElement.extras.indicator;
+    }else if (field === "applicablePeriods" && dataElement.extras && dataElement.extras['Applicable Periods'] && dataElement.extras['Applicable Periods'].length > 0){                    
+      if (Array.isArray(dataElement.extras['Applicable Periods'])) {
+        dataElement.extras['Applicable Periods'].sort();
+      }
+      let peString = "", count = 0;
+      for (const x of dataElement.extras['Applicable Periods']){
+        peString +=  x;        
+        if (count < dataElement.extras['Applicable Periods'].length -1){
+          peString += ", ";
+        }
+        count++; 
+      }     
+      value = peString;
+    }else if (field === "resultTarget" && dataElement.extras && dataElement.extras.resultTarget && dataElement.extras.resultTarget !== ""){
+      value = dataElement.extras.resultTarget;
+    }else if (field === "datatype" && dataElement.datatype && dataElement.datatype !== ""){
+      value = dataElement.datatype;
+    }else if (field === "retired" && dataElement.retired && dataElement.retired !== ""){
+      value = dataElement.retired;
+    }
+    return value;
+  };
+
+  
+  
   //layout
 return (
   
  <div className={classes.container}>
-  <Breadcrumb></Breadcrumb>
-    {errorLoadIndicatorDetail!== null ? <div className={classes.errorMessage}>{errorLoadIndicatorDetail}</div> : null}
-    {errorLoadDataElement!== null ? <div className={classes.errorMessage}>{errorLoadDataElement}</div> : null}
+  {/* <Breadcrumb></Breadcrumb> */}
+  <div ></div>
+    {errorLoadIndicatorDetail!== null ? <div className={classes.errorMessage} style={{marginTop: '30px'}}>{errorLoadIndicatorDetail}</div> : null}
+    {errorLoadDataElement!== null ? <div className={classes.errorMessage} style={{marginTop: '30px'}}>{errorLoadDataElement}</div> : null}
   <Grid container>
   {/* sidebar */}
   <Grid item xs={12} md={3}>      
     <Shortcut ></Shortcut>
-    <Paper className={classes.sidebar}>
+    <Paper className={classes.sidebar} >
     <h4 className={classes.sidebarTitle}>Reference Indicator Filters</h4>
     {/* filters */}
     <form className={classes.filterContainer} autoComplete="off">
@@ -1087,22 +1279,81 @@ return (
     currentIndicator && currentIndicator.length === 0  ? 
         <div>
            <Grid container alignItems="center" >   
-              <div>Select an indicator to view details.</div>             
+              <div style={{marginTop: '30px'}}> Select an indicator to view details.</div>             
           </Grid>
         </div>
         : 
       <div>     
       
-      <headings.H1>{currentIndicator.name}     
-          <Chip style={{ backgroundColor: '#f7f4f0', float:"right"}}
-            variant="outlined" size="medium" label={ currentIndicator.source + ": " + currentIndicator.guidance_version + " - FY " + currentIndicator.periodYear}                    
-          />                     
-      </headings.H1>
+      <headings.H1>{currentIndicator.name}    
+       {downloadIndicatorURL !== "" && panel === 0 ?
+          <Tooltip disableFocusListener title={"Download reference indicator details in json format"}>
+           <Button variant="outlined" href={downloadIndicatorURL} className={classes.actionButton} target="_black"
+           style={{ float:"right"}}           
+          >
+            {currentIndicator.source + ": " + currentIndicator.guidance_version + " - FY " + currentIndicator.periodYear} 
+            <GetAppIcon style={{ color: '#1D5893', marginLeft: '6px' }}/>
+           </Button>  
+          </Tooltip> 
+       :
+      <span>
+          <Tooltip disableFocusListener title={panel === 2 ? "" : "Download data elements"} placement='bottom'>  
+            <span style={{float: 'right'}}>        
+              <Button variant="outlined" className={classes.actionButton} name="downloadDEButton" onClick={dropDownMenu("downloadDE")} id="downloadDEButton"
+              disabled={(matchDataElements.length === 0 || panel === 2 )? true : false} style={{height:'36px',float: 'right'  }}>  
+                {currentIndicator.source + ": " + currentIndicator.guidance_version + " - FY " + currentIndicator.periodYear}                           
+                {
+                  matchDataElements.length === 0 || panel === 2 ?
+                    <GetAppIcon /> : <GetAppIcon style={{ color: '#1D5893', marginLeft: '6px' }} />
+                }
+              </Button>
+            </span>
+          </Tooltip>
+           
+
+          {/* popover panel */}
+          <Popover
+              id={popId}
+              open={popOpen}
+              anchorEl={anchorEl}
+              onClose={popHandleClose}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'center',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'center',
+              }}
+            >
+              {/* download popover panel */}
+              {
+                dropDownName === "downloadDE" ?
+                  <FormControl component="fieldset" className={classes.popOver}>
+                    <FormGroup>
+                      <FormLabel component="legend" className={classes.formLegend}>Data Format</FormLabel>
+                      <RadioGroup aria-label="download" name="downloadRadio" value={downloadValue} onChange={handleDownloadChange}>
+                        <FormControlLabel control={<Radio style={{ color: '#D55804' }} value="HTML" />} label="HTML" />
+                        <FormControlLabel control={<Radio style={{ color: '#D55804' }} value="CSV" />} label="CSV" />
+                        <FormControlLabel control={<Radio style={{ color: '#D55804' }} value="JSON" />} label="JSON" />
+                        <FormControlLabel control={<Radio style={{ color: '#D55804' }} value="XML" />} label="XML" />
+                      </RadioGroup>
+                      <Button type="submit" variant="outlined" className={classes.downloadButton} onClick={performDownload}>
+                        Download DATA
+                    </Button>
+                    </FormGroup>
+                  </FormControl> : null                      
+              }
+            </Popover>
+          </span>
+       }       
+       </headings.H1>           
       
       {/* indicator tabs */}    
       <Tabs value={panel} onChange={handleChange} className={classes.tabContainer}  classes={{ indicator: classes.bigIndicator }}>
         <Tab label="REFERENCE INDICATOR DETAILS" {...a11yProps(0)} />
         <Tab label="DATA ELEMENTS" {...a11yProps(1)} />
+        <Tab label="DATIM INDICATOR" {...a11yProps(2)} />
       </Tabs>
 
      
@@ -1130,17 +1381,17 @@ return (
 
             {/* data elements summary */}
             <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />} aria-controls="panel1a-content" id="panel1a-header" className={classes.expansionPanelSummary}>
-              <Grid container alignItems="center" justify="space-between">       
+              <Grid container alignItems="center" >       
                 <Grid item  xs={12} md={12}>         
                   <Typography className={classes.heading}> 
-                  <strong>{dataElement.display_name}</strong>
+                   {dataElement.display_name}
                   </Typography>
                 </Grid>               
-                  <Grid item xs={12} md={3}  className={classes.chip}>                    
-                    <Chip variant="outlined"   size="small" label={"UID: " + dataElement.external_id} clickable />  
+                  <Grid item xs={12} md={3}  className={classes.chip}>                                        
+                    <span>{"UID: " + dataElement.external_id}</span>
                     </Grid>
                   <Grid item xs={12} md={3} className={classes.chip}>  
-                    <Chip variant="outlined"  style={{ backgroundColor: '#d8ebe0' }}  size="small" label={"Source: " + dataElement.extras.source} clickable />                                                                                         
+                    <span>{"Source: " + dataElement.extras.source} </span>                                                                                     
                   </Grid>
                   <Grid item xs={12} md={6} />
               </Grid>         
@@ -1149,14 +1400,88 @@ return (
             <DataElementDetail dataElementDetail={dataElementDetail} classes={classes} detailPanel={detailPanel} toggleDetailDrawer={toggleDetailDrawer}/> 
           {/* data elements details */}
           <ExpansionPanelDetails className={classes.expansionPanelDetails}>
-            <Grid container>
-            <Grid item  xs={12} className={classes.expansionPanelLeft}>
-              <Typography>
-                <strong>Description</strong>: {dataElement.descriptions ? dataElement.descriptions[0].description : "N/A"}              
-                {/* <strong>Code</strong>: <NavLink to="/indicator" activeClassName="sidebarActive" className={classes.buttonNav}>
-                {dataElement.indicatorName}
-                </NavLink> */}                       
-              </Typography>
+            <Grid container>           
+              <Grid item xs={12} >
+                <Table className={classes.comboTable} aria-label="simple table">
+                  <TableBody>
+                    <TableRow>
+                      <TableCell style={{width: '20%'}} padding='none'><strong>Description</strong></TableCell>
+                      <TableCell padding='none'>
+                      {getDEdetailValue(dataElement, "description") !== "" ? getDEdetailValue(dataElement, "description")  : ""}  
+                      </TableCell>
+                  </TableRow>
+                  {
+                    getDEdetailValue(dataElement, "shortName") !== "" ?
+                    <TableRow>
+                    <TableCell  padding='none'><strong>Short Name</strong></TableCell>
+                    <TableCell padding='none'>
+                    {getDEdetailValue(dataElement, "shortName")}
+                    </TableCell>
+                  </TableRow>
+                  : null
+                  }
+                  {
+                    getDEdetailValue(dataElement, "code") !== "" ?
+                    <TableRow>
+                    <TableCell padding='none'><strong>Code</strong></TableCell>
+                    <TableCell padding='none'>
+                    {getDEdetailValue(dataElement, "code")}
+                    </TableCell>
+                  </TableRow>
+                  : null
+                  }                 
+                  {
+                    getDEdetailValue(dataElement, "indicator") !== "" ?
+                    <TableRow>
+                    <TableCell  padding='none'><strong>Indicator</strong></TableCell>
+                    <TableCell padding='none'>
+                    {getDEdetailValue(dataElement, "indicator")}
+                    </TableCell>
+                  </TableRow>
+                  : null
+                  }
+                   {
+                    getDEdetailValue(dataElement, "applicablePeriods") !== "" ?
+                    <TableRow>
+                    <TableCell  padding='none'><strong>Applicable Periods</strong></TableCell>
+                    <TableCell padding='none'>
+                    {getDEdetailValue(dataElement, "applicablePeriods")}
+                    </TableCell>
+                  </TableRow>
+                  : null
+                  }
+                  {
+                    getDEdetailValue(dataElement, "resultTarget") !== "" ?
+                    <TableRow>
+                    <TableCell padding='none'><strong>Result/Target</strong></TableCell>
+                    <TableCell padding='none'>
+                    {getDEdetailValue(dataElement, "resultTarget")}
+                    </TableCell>
+                  </TableRow>
+                  : null
+                  }
+                  {
+                    getDEdetailValue(dataElement, "datatype") !== "" ?
+                    <TableRow>
+                    <TableCell style={{width: '30%'}} padding='none'><strong>Data Type</strong></TableCell>
+                    <TableCell padding='none'>
+                    {getDEdetailValue(dataElement, "datatype")}
+                    </TableCell>
+                  </TableRow>
+                  : null
+                  }
+                  {
+                    getDEdetailValue(dataElement, "retired") !== "" ?
+                    <TableRow>
+                    <TableCell style={{width: '30%'}} padding='none'><strong>Retired</strong></TableCell>
+                    <TableCell padding='none'>
+                    {getDEdetailValue(dataElement, "retired")}
+                    </TableCell>
+                  </TableRow>
+                  : null
+                  }                  
+              </TableBody>
+            </Table>       
             </Grid>
 
             <Grid item xs={12} className={classes.expansionPanelLeft}>                        
@@ -1325,6 +1650,32 @@ return (
       </TabPanel>
       
     }
+
+    <TabPanel value={panel} index={DATIM_INDICATOR_PANEL} className={classes.tabPanel}>     
+      <DatimIndicator currentIndicator={currentIndicator} 
+                      matchDatimIndicators={matchDatimIndicators} 
+                      classes={classes}  
+                      loading={datimIndicatorLoading} 
+                      error={errorLoadDatimIndiator}  />
+                    
+       {/* pagination */}
+       <table>
+          <tbody>
+            <TableRow>
+              <TablePagination
+                rowsPerPageOptions={[10, 25, 50, 100]}
+                labelDisplayedRows={({ from, to, count }) => `Displaying rows ${from}-${to} of ${count}`}                    
+                count={count}
+                rowsPerPage={rowsPerPage}
+                page={pageDatimIndicator}
+                onChangePage={handleChangePageDatimIndicator}
+                onChangeRowsPerPage={handleChangeRowsPerPage}                    
+              />
+            </TableRow>
+          </tbody>
+        </table>
+        {/*pagination */}
+    </TabPanel>
       </div>
         }
       </Grid>

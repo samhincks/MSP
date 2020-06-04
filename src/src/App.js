@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React from 'react';
 import './App.css';
 import Header from './Components/Header';
@@ -13,7 +14,9 @@ import ReferenceIndicator from './AppShell/ReferenceIndicator';
 import Indicators from './AppShell/Indicators';
 import Compare from './AppShell/Compare';
 import CompareIndicators from './AppShell/CompareIndicators';
+import DataElementDetails from './AppShell/DataElementDetails';
 import { StateProvider } from './ContextSetup';
+import DataInterface from './DataInterface/DataInterface'
 
 import clsx from 'clsx';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
@@ -21,10 +24,8 @@ import Drawer from '@material-ui/core/Drawer';
 
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
-import DataInterface from './DataInterface/DataInterface';
 
 import IconButton from '@material-ui/core/IconButton';
-import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import history from './history';
@@ -159,10 +160,11 @@ export default function App() {
               <Redirect from="/home" to="/" />
               <Route exact path="/" component={Welcome} />
               <Route path="/codelist" component={Codelist} />
+              <Route path="/dataElementDetail" component={DataElementDetails} />
               <Route path="/referenceIndicator" component={ReferenceIndicator} />
               <Route path="/indicators" component={Indicators} />
-              <Route path="/codelist/indicator" component={ReferenceIndicator} />
               <Route path="/datainterface" component={DataInterface} />
+              <Route path="/codelist/indicator" component={ReferenceIndicator} />
               <Route path="/about" component={About} />
               <Route exact path="/index.html" component={Welcome} />
               <Route path="/referenceIndicator/:id" component={ReferenceIndicator} />
@@ -177,6 +179,3 @@ export default function App() {
     </StateProvider>
   );
 }
-
-
-
