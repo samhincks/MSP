@@ -9,7 +9,7 @@ import { useStateValue } from '../ContextSetup';
 import SourceSelector from './SourceSelector';
 import MetaDataView from './MetaDataView';
 import PepfarDataView from './PepfarDataView';
-import DetailsView from './DetailsView';
+import DetailsView from './ModalDetailsView'; // the string of the file name could be good way to implement custom components
 import PepfarFilterPanel from './PepfarFilterPanel';
 import GenericFilter from './GenericFilter';
 //import PepfarDetailsView from './PepfarDetailsView';
@@ -27,33 +27,35 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const FilterArea = styled.div`
-width: 700px;
-height: 400px;
+maxHeight: 400px;
 border-radius: 3px;
 padding: 5px;
 `
 const DetailsArea = styled.div`
-    width: 700px;
-    height: 800px;
     border-radius: 3px;
     padding: 5px;
 `
 
 const LeftArea = styled.div`
-    display:grid;
     justify-content:flex-start;
     flex-direction: column;
+    align-items:
+    box-sizing: border-box;
+    margin-left:200px;
+    margin-top:148px;
 `
 
 const DataInterfaceContainer = styled.div`
     display:flex;
-`
+    width:100%;
+    `
 
 
 export default function DataInterface() {
     const classes = useStyles();
     const [{ domain, source }, dispatch] = useStateValue();
-
+    let removeSearch = false;
+    if (source.removeSearch) removeSearch = source.removeSearch;
     /*
     //.. to do: figure out how to render a copmonent from a string. React.createElement()
     https://reactjs.org/docs/jsx-in-depth.html#choosing-the-type-at-runtime */
@@ -76,10 +78,10 @@ export default function DataInterface() {
                 </FilterArea>
 
                 <DetailsArea>
-                    <DetailsView />
+                    {source.usePopupDetails ? <DetailsView /> : <DetailsView />}
                 </DetailsArea>
             </LeftArea>
-            <DataArea useCustomComponents={source && source.useCustomComponents} />
+            <DataArea removeSearch={removeSearch} useCustomComponents={source && source.useCustomComponents} />
         </DataInterfaceContainer>
     )
 }
@@ -87,7 +89,7 @@ export default function DataInterface() {
 
 const DataAreaContainer = styled.div`
     display: flex;
-    align-items: left; 
+    align-items: left;
     flex-direction: column;
     padding-bottom:100px;
     /*background-color: lightblue;*/
@@ -96,14 +98,15 @@ const DataAreaContainer = styled.div`
 
 function DataArea(props) {
     const classes = useStyles();
+    let removeSearch = false;
+    if (props.removeSearch) removeSearch = props.removeSearch;
     return (
         <DataAreaContainer>
-            {<SearchBar /> /*todo: PepfarSearchBar is specified in DomainConfig */}
+            {!(removeSearch) && <SearchBar /> /*todo: PepfarSearchBar is specified in DomainConfig */}
             {/*DataView && React.createElement(DataView)*/}
             {props.useCustomComponents && <PepfarDataView />}
             {/*source.useCustomPepfarComponents && <PepfarDetailsView />*/}
             {!props.useCustomComponents && <MetaDataView />}
-
         </DataAreaContainer>
     )
 

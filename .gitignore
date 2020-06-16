@@ -1,3 +1,5 @@
 /src/node_modules
 /src/.idea
 /src/build
+.DS_Store
+src/report.20200611.102206.61425.0.001.json

@@ -1,6 +1,6 @@
-import { Connector, createConnector } from "./Connector/Connector.js";
+import { createConnector } from "./Connector/createConnector.js";
 import sourceConfig from "./sourceConfig.json";
-import filterConfig from "./filterConfig.json";
+import attributeConfig from "./attributeConfig.json";
 
 
 export const reducer = (state, action) => {
@@ -41,7 +41,7 @@ export const reducer = (state, action) => {
         domain: action.domain,
         sources: action.domain.sources,
         source: action.domain.sources[0],
-        connector: createConnector(action.domain.sources[0], sourceConfig, filterConfig)
+        connector: createConnector(action.domain.sources[0], sourceConfig, attributeConfig)
       }
 
 
@@ -49,23 +49,25 @@ export const reducer = (state, action) => {
       return {
         ...state,
         sources: action.sources,
-        connector: createConnector(action.sources[0], sourceConfig)
+        connector: createConnector(action.sources[0], sourceConfig, attributeConfig)
       }
 
     case 'changeSource':
       return {
         ...state,
-        connector: createConnector(action.source, sourceConfig),
+        connector: createConnector(action.source, sourceConfig, attributeConfig),
         source: action.source
         // metadataSets: action.source.metadataSets,
         // metadataSet: action.source.metadataSets[0]
       }
 
     case 'changeMetadataSets':
-      return {
-        ...state,
-        metadataSets: action.metadataSets,
-        metadataSet: action.metadataSets[0]
+      if (action.metadataSets) {
+        return {
+          ...state,
+          metadataSets: action.metadataSets,
+          metadataSet: action.metadataSets[0]
+        }
       }
 
     case 'changeMetadataSet':

@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Fragment } from "react";
 
 import styled from "styled-components";
 import { Grid, Container } from "@material-ui/core";
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
+import InputLabel from '@material-ui/core/InputLabel';
+import { useHistory } from 'react-router-dom';
 import { makeStyles } from "@material-ui/core/styles";
+
 
 import { useStateValue } from "../ContextSetup";
 
@@ -41,18 +44,26 @@ const SelectContainer = styled.div`
     position:relative;
 `
 
-export default function Header() {
+export default function Header(props) {
   const classes = useStyles();
   const [{ domains, domain, source }, dispatch] = useStateValue();
+  //const history = useHistory();
   const logoUrl = domain.logo; //.. TODO: change this to the domain chosen in this file.
 
   const updateDomain = (domain) => {
     console.log("updating domain to " + domain.id);
-    if (domain.id === "pepfar_msp") window.location.href = '/codelist';
     dispatch({
       type: 'changeDomain',
       domain: domain
     })
+    console.log("%c location", "color: purple", window.location);
+    //if (window.location.pathname === '/codelist') window.location.pathname = '/datainterface/' + domain.id;//props.history.push("/datainterface")
+
+    if (domain.id === "pepfar_msp") window.location.pathname = '/referenceIndicator';
+    else {    // todo: fix this hack by proper usage of history (this hack is also in context.js)
+      window.location.pathname = '/datainterface/' + domain.id;
+      // https://stackoverflow.com/questions/3338642/updating-address-bar-with-new-url-without-hash-or-reloading-the-page
+    }
   }
 
   return (
@@ -66,13 +77,18 @@ export default function Header() {
               </a>
             </Title>
           </Grid>
-          <SelectContainer>
-            <Select value={domain} onChange={(e) => updateDomain(e.target.value)} labelId="label" id="select">
-              {domains.map(domain =>
-                <MenuItem key={domain.id} value={domain}>{domain.title}</MenuItem>
-              )}
-            </Select>
-          </SelectContainer>
+          <Grid item xs={2}>
+            <SelectContainer>
+              <InputLabel shrink id="demo-simple-select-placeholder-label-label">
+                Domain
+              </InputLabel>
+              <Select label="Domain:" value={domain} onChange={(e) => updateDomain(e.target.value)} labelId="label" id="select">
+                {domains.map(domain =>
+                  <MenuItem key={domain.id} value={domain}> {domain.title}</MenuItem>
+                )}
+              </Select>
+            </SelectContainer>
+          </Grid>
         </Grid>
       </Container>
     </HeaderContainer>

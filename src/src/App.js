@@ -134,7 +134,7 @@ export default function App() {
             >
               {/* <MenuIcon /> */}
             </IconButton>
-            <Header />
+            <Header history={history} />
           </Toolbar>
         </AppBar>
         <Router history={history}>

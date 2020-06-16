@@ -52,7 +52,7 @@ const tableStyle = theme => ({
         padding: "12px 8px",
         /*maxWidth: "150px",*/
         verticalAlign: "middle",
-        fontSize: "0.8125rem",
+        fontSize: "1.125rem",
         overflowX: "hidden"
     },
     tableResponsive: {

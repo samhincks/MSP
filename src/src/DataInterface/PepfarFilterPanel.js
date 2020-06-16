@@ -143,6 +143,7 @@ export default function PepfarFilterPanel() {
 
     const [{ filterValues, dataElements }, dispatch] = useStateValue();
     console.log(filterValues);
+
     //initial filter state
     //.. todo: retire this code since we are now saving filter values with useStateValue
     const [values, setValues] = React.useState({
@@ -153,8 +154,6 @@ export default function PepfarFilterPanel() {
         frequency: "All",
         indicator: "All"
     });
-
-
 
     // when source changes.
     useEffect(() => {

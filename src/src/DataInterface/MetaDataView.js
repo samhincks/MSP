@@ -6,6 +6,24 @@ import CustomTable from './components/CustomTable';
 import TableRow from '@material-ui/core/TableRow';
 import TablePagination from '@material-ui/core/TablePagination';
 
+import { makeStyles } from '@material-ui/core/styles';
+import LinearProgress from '@material-ui/core/LinearProgress';
+
+const useStyles = makeStyles((theme) => ({
+    root: {
+        width: '100%',
+        marginTop: '50px',
+        '& > * + *': {
+            marginTop: theme.spacing(2),
+        },
+    },
+    title: {
+        "text-align": 'center',
+        "position": "relative",
+        "marginTop": '60px'
+    }
+}));
+
 
 
 const DataSetsGrid = styled.div`
@@ -21,7 +39,6 @@ const DataSetsGrid = styled.div`
 
 const SearchDataSets = () => {
     const [{ connector }, dispatch] = useStateValue();
-
     const updateDataSets = (e) => {
         let search = e.target.value
         const filtered = connector.jsonData.filter(dataset => dataset.display_name.toLowerCase().includes(search.toLowerCase()))
@@ -43,6 +60,7 @@ const SearchResultsContainer = styled.div`
 
 export default function MetaDataView() {
     const [{ metadataSet, searchResults, connector, filterValues, limit, pageNum }, dispatch] = useStateValue();
+    const classes = useStyles();
 
     async function updateSearchResults() {
         if (metadataSet == null) return;
@@ -52,6 +70,11 @@ export default function MetaDataView() {
             limit: limit,
             pageNum: pageNum
         }
+        dispatch({
+            type: 'changeSearchResults',
+            searchResults: {}
+        });
+
         const searchResults = await connector.getSearchResults(metadataSet, params);
         //console.log("%c searchResults is ", "color:purple", searchResults)
 
@@ -75,7 +98,9 @@ export default function MetaDataView() {
             {/*connector && connector.jsonData &&
                 <SearchDataSets></SearchDataSets>*/
             }
-            {searchResults.names.length > 0 && <CustomTable
+            {<h1 className={classes.title}>{metadataSet && (metadataSet.id || metadataSet.name)}</h1>}
+            {!searchResults.names && <LinearIndeterminate />}
+            {searchResults && searchResults.names && searchResults.names.length > 0 && <CustomTable
                 tableHeaderColor="warning"
                 tableHead={searchResults.names}
                 tableData={searchResults.entries} />}
@@ -95,7 +120,12 @@ const PageContainer = (props) => {
     const [{ searchResults, connector, filterValues, pageNum, limit }, dispatch] = useStateValue();
     let [rowsPerPage, setRowsPerPage] = useState(limit);
     const [page, setPage] = useState(pageNum - 1);
-    let [count, setCountOfValues] = useState(searchResults.totalEntries || 0);
+    let totalEntries = 0;
+
+    if (searchResults && searchResults.totalEntries)
+        totalEntries = searchResults.totalEntries;
+
+    let [count, setCountOfValues] = useState(totalEntries);
 
     // When API call done elsewhere it resets the data models point of
     // truth for what page we're on, this hook changes the GUI
@@ -105,7 +135,12 @@ const PageContainer = (props) => {
     }, [pageNum]);
 
     useEffect(() => {
-        setCountOfValues(searchResults.totalEntries || 0);
+        totalEntries = 0;
+
+        if (searchResults && searchResults.totalEntries)
+            totalEntries = searchResults.totalEntries;
+
+        setCountOfValues(totalEntries);
     }, [searchResults]);
 
     const handleChangePage = (event, newPage) => {
@@ -150,6 +185,18 @@ const PageContainer = (props) => {
                 </TableRow>
             </tbody>
         </table>)
+}
+
+
+export function LinearIndeterminate() {
+    const classes = useStyles();
+
+    return (
+        <div className={classes.root}>
+            <LinearProgress />
+            <LinearProgress color="secondary" />
+        </div>
+    );
 }
 
 

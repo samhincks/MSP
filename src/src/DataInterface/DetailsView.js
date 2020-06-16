@@ -68,14 +68,9 @@ export default function DetailsView() {
         updateDetails()
     }, [details]);
 
-
-    //.. todo implement serch
-    //..let data = filtered ? filtered : connector && connector.jsonData;
-    //let data = searchResults;
-
     return (
         <DetailsContainer>
-            {details && <DataTreeView treeItems={details} />}
+            {details && <DataTreeView treeItems={details.items} />}
         </DetailsContainer >
     )
 }

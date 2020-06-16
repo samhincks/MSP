@@ -6,15 +6,14 @@
                 "retired",
                 "version"
             ],
-            "attributes": [
+            "searchAttributes": [
                 {
                     "id": "id",
                     "name": "ID"
                 },
                 {
                     "id": "display_name",
-                    "name": "Name",
-                    "detail": "title"
+                    "name": "Name"
                 },
                 {
                     "id": "concept_class",
@@ -26,8 +25,7 @@
                         "Diagnosis",
                         "Test",
                         "Misc"
-                    ],
-                    "detail": "emphasize"
+                    ]
                 },
                 {
                     "id": "datatype",
@@ -38,7 +36,26 @@
                         "Numeric"
                     ]
                 }
-            ]
+            ],
+            "details": {
+                "title": "display_name",
+                "description": {
+                    "id": "descriptions",
+                    "type": "array",
+                    "index": "0",
+                    "idInArray": "description"
+                },
+                "attributes": [
+                    {
+                        "id": "uuid",
+                        "name": "UUID"
+                    },
+                    {
+                        "id": "external_id",
+                        "name": "External ID"
+                    }
+                ]
+            }
         }
     ]
 }

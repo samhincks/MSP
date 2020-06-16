@@ -60,73 +60,6 @@
             ]
         },
         {
-            "id": "kitchen_sink",
-            "title": "Kitchen Sink",
-            "name": "Kitchen Sink Demo Domain",
-            "description": "Demonstration of all connector types supported by the OCL Metadata Browser",
-            "logo": "",
-            "backgroundImage": "",
-            "initialAction": "loadLandingPage('pepfar-msp-landing-page')",
-            "attributes": {},
-            "sources": [
-                {
-                    "id": "test.ohie.datim.org/hapi-fhir-jpaserver",
-                    "sourceProfile": "fhir",
-                    "title": "test.ohie.datim.org/hapi-fhir-jpaserver",
-                    "name": "Test FHIR server for DATIM",
-                    "description": "Test FHIR server for DATIM",
-                    "initialAction": "loadMetadataset()",
-                    "doAutopopulateMetadataSets": false,
-                    "connector": {
-                        "id": "FhirConnector",
-                        "rootUrl": "https://test.ohie.datim.org/hapi-fhir-jpaserver/fhir",
-                        "authenticationMethod": "None"
-                    },
-                    "attributes": {},
-                    "metadataSets": [
-                        {
-                            "id": "Questionnaire",
-                            "title": "Questionnaire",
-                            "name": "FHIR Questionnaires",
-                            "description": "FHIR Questionnaires",
-                            "attributes": {
-                                "exampleSearchRequest": "https://test.ohie.datim.org/hapi-fhir-jpaserver/fhir/Questionnaire/",
-                                "exampleDetailsRequest": "https://test.ohie.datim.org/hapi-fhir-jpaserver/fhir/Questionnaire/?url=http://datim.org/fhir/Questionnaire/PLM-HIV-Questionnaire"
-                            }
-                        },
-                        {
-                            "id": "ValueSet",
-                            "title": "ValueSet",
-                            "name": "FHIR Value Sets",
-                            "description": "FHIR Value Sets",
-                            "initialAction": "fetchSearchResults",
-                            "attributes": {
-                                "exampleSearchRequest": "https://test.ohie.datim.org/hapi-fhir-jpaserver/fhir/ValueSet/",
-                                "exampleDetailsRequest": "https://test.ohie.datim.org/hapi-fhir-jpaserver/fhir/ValueSet/?url=http://hl7.org/fhir/ValueSet/administrative-gender"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "id": "pepfarQmap",
-                    "sourceProfile": "pepfarQmap",
-                    "title": "PEPFAR QMAP",
-                    "name": "PEPFAR Questionnaire Mapping",
-                    "description": "PEPFAR Questionnaire Mapping",
-                    "initialAction": "loadMetadataset()",
-                    "doAutopopulateMetadataSets": true,
-                    "connector": {
-                        "id": "PepfarQmapConnector",
-                        "rootUrl": "https://test.ohie.datim.org:5000/plm-qmap/",
-                        "authenticationMethod": "None"
-                    },
-                    "attributes": {
-                        "domain": "mAtches3"
-                    }
-                }
-            ]
-        },
-        {
             "id": "ciel",
             "title": "CIEL",
             "name": "Columbia International eHealth Laboratory Interface Terminology and Value Sets",
@@ -162,14 +95,15 @@
         },
         {
             "id": "rainbow",
-            "title": "Rainbow",
+            "title": "Pepfar POC",
             "name": "Rainbow",
             "sources": [
                 {
                     "id": "moh",
                     "sourceProfile": "moh",
-                    "title": "",
-                    "doAutopopulateMetadataSets": false,
+                    "title": "MOH",
+                    "doAutopopulateMetadataSets": true,
+                    "removeSearch": true,
                     "metadataSets": [
                         {
                             "id": "moh-alignment-fy18",
@@ -192,11 +126,24 @@
                                 "period": "FY19",
                                 "url": "https://test.ohie.datim.org:5000/ocl-etl/moh/FY19/"
                             }
+                        },
+                        {
+                            "id": "moh-alignment-fy20",
+                            "title": "FY20 MOH Alignment Codelist",
+                            "name": "FY20 MOH Alignment Codelist",
+                            "description": "FY20 MOH Alignment Codelist",
+                            "disableDetailsQuery": true,
+                            "attributes": {
+                                "period": "FY20",
+                                "url": "https://test.ohie.datim.org:5000/ocl-etl/moh/FY20/"
+                            }
                         }
                     ],
                     "connector": {
                         "id": "RainbowConnector",
-                        "rootUrl": "",
+                        "rootUrl": "https://test.ohie.datim.org:5000/ocl-etl/moh/",
+                        "tempUrl": "https://api.staging.openconceptlab.org/orgs/PEPFAR/sources/?extras__datim_moh_codelist=true&verbose=true",
+                        "detailsUrl": "https://api.staging.openconceptlab.org/orgs/PEPFAR/sources/",
                         "authenticationMethod": "None"
                     },
                     "attributes": {}
@@ -204,11 +151,11 @@
                 {
                     "id": "imap",
                     "sourceProfile": "imap",
-                    "title": "",
+                    "title": "IMAP",
                     "doAutopopulateMetadataSets": true,
                     "connector": {
                         "id": "RainbowConnector",
-                        "rootUrl": "https://ohie.datim.org/ocl-imap/",
+                        "rootUrl": "https://test.ohie.datim.org:5000/ocl-imap",
                         "authenticationMethod": "None"
                     },
                     "attributes": {}
@@ -216,11 +163,11 @@
                 {
                     "id": "qmap",
                     "sourceProfile": "qmap",
-                    "title": "",
+                    "title": "QMAP",
                     "doAutopopulateMetadataSets": true,
                     "connector": {
                         "id": "RainbowConnector",
-                        "rootUrl": "",
+                        "rootUrl": "https://test.ohie.datim.org:5000/ocl-qmap/",
                         "authenticationMethod": "None"
                     },
                     "attributes": {}
@@ -228,14 +175,54 @@
                 {
                     "id": "mer",
                     "sourceProfile": "mer",
-                    "title": "",
+                    "title": "MER Codelist",
                     "doAutopopulateMetadataSets": true,
                     "connector": {
                         "id": "RainbowConnector",
-                        "rootUrl": "",
+                        "rootUrl": "https://test.ohie.datim.org:5000/ocl-etl/msp/",
+                        "tempUrl": "https://api.staging.openconceptlab.org/orgs/PEPFAR-Test7/collections/?collectionType=”Code+List” ",
+                        "detailsUrl": "https://api.staging.openconceptlab.org/orgs/PEPFAR-Test7/sources/MER/concepts/",
                         "authenticationMethod": "None"
                     },
                     "attributes": {}
+                },
+                {
+                    "id": "test.ohie.datim.org/hapi-fhir-jpaserver",
+                    "sourceProfile": "fhir",
+                    "title": "Test DATIM FHIR Server",
+                    "name": "Test FHIR server for DATIM",
+                    "description": "Test FHIR server for DATIM",
+                    "initialAction": "loadMetadataset()",
+                    "doAutopopulateMetadataSets": false,
+                    "connector": {
+                        "id": "FhirConnector",
+                        "rootUrl": "https://test.ohie.datim.org/hapi-fhir-jpaserver/fhir",
+                        "authenticationMethod": "None"
+                    },
+                    "attributes": {},
+                    "metadataSets": [
+                        {
+                            "id": "Questionnaire",
+                            "title": "Questionnaire",
+                            "name": "FHIR Questionnaires",
+                            "description": "FHIR Questionnaires",
+                            "attributes": {
+                                "exampleSearchRequest": "https://test.ohie.datim.org/hapi-fhir-jpaserver/fhir/Questionnaire/",
+                                "exampleDetailsRequest": "https://test.ohie.datim.org/hapi-fhir-jpaserver/fhir/Questionnaire/?url=http://datim.org/fhir/Questionnaire/PLM-HIV-Questionnaire"
+                            }
+                        },
+                        {
+                            "id": "ValueSet",
+                            "title": "ValueSet",
+                            "name": "FHIR Value Sets",
+                            "description": "FHIR Value Sets",
+                            "initialAction": "fetchSearchResults",
+                            "attributes": {
+                                "exampleSearchRequest": "https://test.ohie.datim.org/hapi-fhir-jpaserver/fhir/ValueSet/",
+                                "exampleDetailsRequest": "https://test.ohie.datim.org/hapi-fhir-jpaserver/fhir/ValueSet/?url=http://hl7.org/fhir/ValueSet/administrative-gender"
+                            }
+                        }
+                    ]
                 }
             ]
         }

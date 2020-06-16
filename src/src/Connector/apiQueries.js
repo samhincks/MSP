@@ -27,9 +27,9 @@ export const getJSONDataFromAPI = async (url, options) => {
                 mode: 'cors'
             }
         }
-        console.log("%c running query " + url, "color:orange");
-        const response = await fetch(url, options);
-
+        console.log("%c running query " + url, "color:orange", options);
+        //const response = await fetch(url, options);
+        const response = await fetch(url);
         if (!response.ok) {
             console.log(response);
             throw new Error(
@@ -51,10 +51,10 @@ export const getJSONDataFromAPI = async (url, options) => {
             //console.log(`${key} = ${value}`);
             if (key === 'num_found') numFound = value;
         }
-
-        const jsonData = await response.json(); //.. response[0]
+        let jsonData = await response.json(); //.. response[0]
         jsonData.numFound = numFound;
-        console.log("returned", jsonData);
+
+        console.log("%c returned", "color:orange", jsonData);
         /*
                 if (!jsonData.length || jsonData.length === 0) {
                     console.log("jsonData is empty");
@@ -66,7 +66,7 @@ export const getJSONDataFromAPI = async (url, options) => {
         return jsonData;
 
     } catch (e) {
-        throw new Error("error: " + e.message);
+        console.log("%c error: " + e.message, "color:red");
     }
 }
 

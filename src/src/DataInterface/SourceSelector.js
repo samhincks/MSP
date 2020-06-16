@@ -22,6 +22,8 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
+import InputLabel from '@material-ui/core/InputLabel';
+
 
 import LocalOfferOutlinedIcon from '@material-ui/icons/LocalOfferOutlined';
 import { useStateValue } from "../ContextSetup";
@@ -35,7 +37,7 @@ const useStyles = makeStyles(theme => ({
         justifyContent: "left",
         color: props => '#1d5893',
         width: '100%',
-        minWidth: '200px',
+        minWidth: '250px',
         fontSize: '1.0em',
         backgroundColor: props => props.index === 0 && props.initState ? '#C1A783' : "white",
         '&:hover, &:focus': {
@@ -47,7 +49,6 @@ const useStyles = makeStyles(theme => ({
         backgroundColor: '#C1A783',
         color: '#000000'
     },
-
     shortcutButtonSelected: {
         color: '#000000',
         backgroundColor: '#C1A783',
@@ -59,7 +60,6 @@ const useStyles = makeStyles(theme => ({
             color: '#000000'
         }
     },
-
     sidebar: {
         margin: '0em',
         marginRight: '2em'
@@ -91,12 +91,20 @@ export default function SourceSelector() {
     // Hook tied to changes in connector and domain
     useEffect(() => {
         async function updateMetadatasets() {
+            dispatch({
+                type: 'changeMetadataSets',
+                metadataSets: []
+            })
             const metadataSets = await connector.getMetadataSets();
             //console.log(metadataSets);
             dispatch({
                 type: 'changeMetadataSets',
                 metadataSets: metadataSets
             })
+            dispatch({
+                type: 'changeSearchResults',
+                searchResults: {}
+            });
         }
 
         updateMetadatasets()
@@ -119,6 +127,9 @@ export default function SourceSelector() {
                 <Grid item xs={12} md={12}  >
                     {sources.length > 1 &&
                         <SelectContainer>
+                            <InputLabel shrink id="demo-simple-select-placeholder-label-label">
+                                Source
+              </InputLabel>
                             <Select value={source} onChange={(e) => updateSource(e.target.value)} labelId="label" id="select">
                                 {sources.map(source =>
                                     <MenuItem key={source.id} value={source}>{source.title}</MenuItem>

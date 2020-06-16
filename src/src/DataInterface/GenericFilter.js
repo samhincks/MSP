@@ -151,7 +151,7 @@ export default function GenericFilter() {
                 <div className={`${classes.container} ${classes.sidebarContainer}`}>
                     <h4 className={classes.sidebarTitle}>Filters</h4>
                     <form autoComplete="off">
-                        {searchResults.attributes && searchResults.attributes.map(attribute => < FilterItem key={attribute.id} length={searchResults.entries.length} attribute={attribute} />
+                        {searchResults && searchResults.attributes && searchResults.attributes.map(attribute => < FilterItem key={attribute.id} length={searchResults.entries.length} attribute={attribute} />
                         )}
                     </form>
                 </div>

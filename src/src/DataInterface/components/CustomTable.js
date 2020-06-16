@@ -26,7 +26,7 @@ export default function CustomTable(props) {
     const [selected, setSelected] = React.useState([]);
 
     async function handleCustomTableClick(entry) {
-        const details = await connector.getDetails(metadataSet, entry.url);
+        const details = await connector.getDetails(metadataSet, entry);
         dispatch({
             type: 'setDetails',
             details: details
@@ -91,10 +91,22 @@ export default function CustomTable(props) {
                     </TableHead>
                 ) : null}
                 <TableBody>
-                    {tableData.map((prop, key) => {
+                    {tableData && tableData.map((prop, key) => {
                         const isItemSelected = isSelected(key);
                         const labelId = `enhanced-table-checkbox-${key}`;
                         if (isItemSelected) { console.log(key) }
+
+                        let columns = [];
+                        if (prop.row)
+                            columns = prop.row;
+                        else
+                            columns = prop;
+
+                        if (!columns instanceof Array) {
+                            columns = [prop.values];
+                            console.log("%c warning converting search results columns to array", "color:red");
+                        }
+
                         return (
                             <TableRow hover key={key} onMouseOver={rowHover} onClick={(event) => handleClick(event, key)} className={classes.tableBodyRow}>
                                 <TableCell padding="checkbox">
@@ -103,7 +115,7 @@ export default function CustomTable(props) {
                                         inputProps={{ 'aria-labelledby': labelId }}
                                     />
                                 </TableCell>
-                                {prop.values.map((item, key) => {
+                                {columns.map((item, key) => {
                                     return (
                                         <Tooltip onClose={handleCellClose} key={key + "t"} onOpen={handleCellOpen} title={maximizeLength(item) || ""} placement="top-start">
                                             <TableCell onClick={() => handleCustomTableClick(prop)} className={classes.tableCell} key={key} item={item}>

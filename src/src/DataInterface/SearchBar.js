@@ -10,22 +10,21 @@ import { useStateValue } from '../ContextSetup';
 
 
 const useStyles = makeStyles(theme => ({
-    container: {
-        maxWidth: '1200px',
-        margin: '0 auto',
-    },
+
     search: {
         // padding: '6px 4px',
-        maxWidth: '275px',
+        width: '350px',
         border: '2px solid #D55804',
-
         /*borderColor: `'#D55804' !important`,
         borderWidth: '2px',*/
-        marginTop: '50px'
+        marginTop: '50px',
+        marginLeft: '50x'
+
     },
     input: {
         marginLeft: theme.spacing(1),
         flex: 1,
+        width: '80%'
     },
     searchButton: {
         padding: 10,
@@ -81,10 +80,10 @@ export default function SearchBar() {
     };
 
     return (
-        <div> <Paper component="form" className={classes.search}>
+        <Paper component="form" className={classes.search}>
             <InputBase
                 className={classes.input}
-                placeholder="Search Data Elements"
+                placeholder="Search"
                 inputProps={{ 'aria-label': 'search data elements' }}
                 id="inputSearch"
                 key="inputSearch"
@@ -97,7 +96,6 @@ export default function SearchBar() {
                 <SearchIcon />
             </IconButton>
         </Paper>
-        </div>
 
     )
 }

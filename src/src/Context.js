@@ -1,17 +1,23 @@
 import domainConfig from "./domainConfig.json";
-import { Source, createConnector } from "./Connector/Connector.js"
+import { createConnector } from "./Connector/createConnector.js"
 import sourceConfig from "./sourceConfig.json";
-import filterConfig from "./filterConfig.json";
+import attributeConfig from "./attributeConfig.json";
 import SourceSelector from './DataInterface/SourceSelector.js';
 
 //.. Instantiate a Default Source for the Domain
-let initDomain = domainConfig.domains[2];
+//.. this entails that when switching from codelist to data interface, initDomain always goes to [2]
+let initDomain = domainConfig.domains[0];
+if (window.location.pathname.startsWith('/datainterface')) initDomain = domainConfig.domains[1];
+if (window.location.pathname === '/datainterface/ciel') initDomain = domainConfig.domains[1];
+if (window.location.pathname === '/datainterface/rainbow') initDomain = domainConfig.domains[2];
+// todo: fix this hack by proper usage of history
+
 let initSources = initDomain.sources;
 let initSourceOfDomain = initSources[0];
 let initMetadataSets = null; //.. metadatasets are set with help of Source class because sometimes they autopopulate with API call
 let initMetadataSet = null;
-
-let connector = createConnector(initSourceOfDomain, sourceConfig, filterConfig);
+console.log("%c REINITIALIZING WINDOW", "color:turquoise");
+let connector = createConnector(initSourceOfDomain, sourceConfig, attributeConfig);
 
 // todo: put this in domainConfig and decide if you then want options there as well
 /*let initialFilterValues = {

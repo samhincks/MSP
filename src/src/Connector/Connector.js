@@ -1,22 +1,19 @@
-/*
-A Connector has one or two subclasses.
-If it has one subclass, then there is straightforward
-synchronization between it and the React Interface which
-populates filter panels and data view components from the
-JSON, CSV, XML, or other file formatted data it retrieves
-from the unique connectors to a given Source. So this Source
-is not Informational in the sense that it makes decisions
-on the basis of a Source's properties.
-*/
+/**
+ * Generic Connector class, extended by multiple subclasses, e.g. RainbowConnector, OclConnector
+ */
 import { getJSONDataFromAPI } from "./apiQueries";
-import { Resource, fhirSearchResult, oclSearchResult } from "./Resource";
-import createBreakpoints from "@material-ui/core/styles/createBreakpoints";
 
-export class Connector {
+export default class Connector {
 
-    constructor(sourceObj, sourceConfigObj, filterConfig) {
+    /* Call this constructor from the class implementing the Connector interface
+        Depends on 
+        domainConfig.js/source : 
+        sourceConfig
+        attributeConfig 
+    */
+    constructor(sourceObj, sourceConfigObj, attributeConfig) {
         this.sourceObj = sourceObj;
-        this.filterConfig = filterConfig;
+        this.filterConfig = attributeConfig;
         this.sourceConfigObj = sourceConfigObj;
 
         //... TODO figure out let connectorClass = window[sourceConfigObj.connectorClass];
@@ -25,39 +22,143 @@ export class Connector {
         this.rootUrl = sourceObj.connector.rootUrl;
         this.authenticationMethod = sourceObj.connector.authenticationMethod;
         this.ownerId = sourceObj.attributes.owner_id;
-        //this.titleKey = sourceConfigObj.keys.title;
 
         if (!this.doAutopopulateMetadataSets) {
             this.metadataSets = sourceObj.metadataSets;
         }
     }
 
+    /*Generic metadataSets search, override in subclass if url construction is not straightforward */
     async getMetadataSets() {
         if (!this.doAutopopulateMetadataSets)
             return this.metadataSets;
 
-        let jsonResponse = await getJSONDataFromAPI(this.rootUrl);
+        let populateMetadataSetsUrl = this.rootUrl;
+        let jsonResponse = await getJSONDataFromAPI(populateMetadataSetsUrl);
         return jsonResponse;
     }
 
-    /* Restructure an API response to fit with nomenclature of DetailsView [{id:id, name:name, children: }]
-     */
-    async getDetails(metadataSet, url) {
-        let response = await getJSONDataFromAPI(this.rootUrl + url);
-        let filterAttributes = this.filterConfig.metadataSets.find(item => item.id == metadataSet.id);
-        let arrayOfDetails = this.createDetailsStructureForResource(response, filterAttributes)
 
-        return arrayOfDetails;
+    /* GetDetails()
+        Expect: -  (required) metadataSet that encodes base url of resource request
+                -  (required) entry object with information about the specific resource selected (either rooturl + entry.url) or entry is the url
+        Return: -  details 
+                        .items: a reproduction of the jsonObj with children for items that are childen
+                        .title: a string of the title of the object
+                        .description: a string with description of the object
+                        .attributes: (optional) the attributes to emphasize of the object
+    */
+    async getDetails(metadataSet, entry) {
+        let url;
+        if (entry.url) {
+            url = this.rootUrl + entry.url;
+        }
+        else {
+            url = entry;
+        }
+
+        console.log("%c sr", "color:blue", url);
+
+        let response = await getJSONDataFromAPI(url);
+        let attributes = this.filterConfig.metadataSets.find(item => item.id == metadataSet.id);
+        if (!attributes) attributes = this.filterConfig.metadataSets.find(item => item.id == "COVID-19-Starter-Set");
+
+        let arrayOfDetails = this.createDetailsStructureForResource(response, attributes)
+        let details = {
+            items: arrayOfDetails,
+            title: this.getTitleOfDetail(response, attributes),
+            description: this.getDescriptionOfDetail(response, attributes),
+            attributes: this.getAttributesOfDetail(response, attributes)
+        }
+        return details;
     }
 
-    /* Recursive function for creating an array of items 
-        with id, name, and children with recursive call
+
+    /* Given a jsonObj as response and a set of attributes (as specified in AttributeConfig),
+        returns an arrayOfAttributes with name, id, value properties.
+    */
+    getAttributesOfDetail(response, attributes) {
+        if (!attributes || !attributes.details || !attributes.details.attributes) return [];
+        let retAttributes = [];
+        for (let attribute of attributes.details.attributes) {//(let [key, value] of attributes.details.attributes) {
+            try {
+                let value = this.getAttributeWithKeyFromResponse(attribute.id, response);
+                let attr = {
+                    "name": attribute.name,
+                    "id": attribute.id,
+                    "value": value
+                }
+                retAttributes.push(attr);
+            }
+            catch (e) {
+                console.log("%c Could not parse attribute ", "color:red", attribute);
+                continue;
+            }
+        }
+        return retAttributes
+    }
+
+
+    //.. todo: implement complex parsing of arrays and sub indexing of objects from attributeConfig
+    getAttributeWithKeyFromResponse(key, response) {
+        return response[key];
+    }
+
+
+    /* Given the response as a jsonObj and attributes as specified in attributeConfig, 
+        return the description for the object as a string
      */
-    createDetailsStructureForResource(jsonObj, filterAttributes) {
+    getDescriptionOfDetail(jsonObj, attributes) {
+        if (!attributes || !attributes.details) return "No Description1";
+        if (!attributes.details.description) return "No Description2";
+        let description = attributes.details.description;
+
+        if (description instanceof Object) {
+            try {
+                let index = parseInt(description.index);
+                let jsonDescriptions = jsonObj[description.id];
+
+                let idOfObjInArray = description.idInArray;
+                return jsonDescriptions[index][idOfObjInArray];
+            }
+            catch (e) { return "No description3" }
+        }
+        else {
+            try {
+                return jsonObj[description];
+            }
+            catch (e) { return "No description4" }
+        }
+    }
+
+
+    /* Given the response as a jsonObj and attributes as specified in attributeConfig, 
+        return the title for the object as a string
+     */
+    getTitleOfDetail(jsonObj, attributes) {
+        if (!attributes || !attributes.details) return "No Name";
+        if (!attributes.details.title) return "No Name";
+
+        if (jsonObj.hasOwnProperty(attributes.details.title)) return jsonObj[attributes.details.title];
+        else return "No Name";
+    }
+
+
+    /* Recursive function for creating an array of items  with id, name, and children with recursive call
+        Input
+            jsonObj - (required) the object to iterate over
+            attributes - (optional) attributes to potentially ignore
+        Return
+            arrayOfObjs with
+                - id - the key of the object
+                - name - the value with key
+                - children - any sub objects or arrays of the object (created recursively)
+     */
+    createDetailsStructureForResource(jsonObj, attributes) {
         let retObjs = [];
         for (let key in jsonObj) {
             // Skip attribute if it's listed in our filterConfig ignore file 
-            if (filterAttributes && filterAttributes.ignore.includes(key)) continue;
+            if (attributes && attributes.ignore.includes(key)) continue;
 
             let value = jsonObj[key];
             let newObj = {};
@@ -66,24 +167,19 @@ export class Connector {
             if (typeof value === 'string') {
                 newObj.name = value;
             }
-
             if (typeof value === 'object') {
                 newObj.name = key;
-                newObj.children = this.createDetailsStructureForResource(value, filterAttributes);
+                newObj.children = this.createDetailsStructureForResource(value, attributes);
             }
             if (typeof value === 'array') { //.. not sure if this is separate case from object
                 newObj.name = key;
-                newObj.children = this.createDetailsStructureForResource(value, filterAttributes);
+                newObj.children = this.createDetailsStructureForResource(value, attributes);
             }
             retObjs.push(newObj);
         }
         return retObjs;
     }
 
-    getTitle(resource) {
-        //.. todo handle the fact that the title string can be double nested with a "." in sourceConfig.json
-        return resource[this.titleKey];
-    }
 
     getValuesWithKeyAsArray(array, key) {
         let retArray = [];
@@ -98,15 +194,16 @@ export class Connector {
     Expects an attribute to have the key and name properties as specified in
     filterConfig */
     createTableForResourceWithFilter(filterObj, entries) {
-        let headers = filterObj.attributes && this.getValuesWithKeyAsArray(filterObj.attributes, "name");
-        let keys = filterObj.attributes && this.getValuesWithKeyAsArray(filterObj.attributes, "id");
+        let headers = filterObj.searchAttributes && this.getValuesWithKeyAsArray(filterObj.searchAttributes, "name");
+        let keys = filterObj.searchAttributes && this.getValuesWithKeyAsArray(filterObj.searchAttributes, "id");
 
         let table = this.createTableForResourceWithHeaders(headers, keys, entries, false);
-        table.attributes = filterObj.attributes;
+        table.attributes = filterObj.searchAttributes;
         return table;
     }
     /*
         Create a Table of Attributes by querying 
+        todo:implement
     */
     createTableForResourceWithFacetedFilter(entries) {
 
@@ -129,7 +226,7 @@ export class Connector {
             let result = entries[i];
 
             let entry = {
-                values: [],
+                row: [],
                 url: result.url
             }
 
@@ -143,7 +240,6 @@ export class Connector {
                 let expandedKey = key.split(".");
                 let value;
 
-
                 if (expandedKey.length == 1)
                     value = result[key];
 
@@ -154,7 +250,7 @@ export class Connector {
 
 
                 if (value)
-                    entry.values.push(value)
+                    entry.row.push(value)
                 else
                     console.log("Warning: no entry for ", keys[i], " of ", result);
             }
@@ -167,6 +263,10 @@ export class Connector {
         return table;
     }
 
+    /* In the event that we have not created an AttributeConfig file for the object, 
+       then we can call createTableForResourceWithHeaders with the createAttributes tags
+       and create an attribute description for the table for use in Details and Filter
+     */
     createAttributesFromTable(table) {
         let attributes = [];
 
@@ -178,7 +278,7 @@ export class Connector {
             }
 
             for (let j in table.entries) {
-                let option = table.entries[j].values[i];
+                let option = table.entries[j].row[i];
 
                 if (!(attribute.options.includes(option)))
                     attribute.options.push(option);
@@ -191,193 +291,3 @@ export class Connector {
     }
 }
 
-
-
-/**
- * The OCL Connector
- */
-export class OclConnector extends Connector {
-
-    constructor(sourceObj, sourceConfigObj, filterConfig) {
-        super(sourceObj, sourceConfigObj, filterConfig);
-        this.ownerTypeStem = "orgs";
-        this.verbose = true; // todo, genericize or make option
-    }
-
-
-    async getMetadataSets() {
-        if (!this.doAutopopulateMetadataSets)
-            return this.metadataSets;
-
-        let url = this.getCollectionsQuery();
-        let jsonResponse = await getJSONDataFromAPI(url); //.. Better to use promises so that the next one can be executed while we wait
-
-        url = this.getSourcesQuery();
-        let jsonResponse2 = await getJSONDataFromAPI(url);
-
-        let unionOfArrays = jsonResponse.concat(jsonResponse2);
-        //console.log("%c union of arrays", "color:grey", unionOfArrays);
-        if (this.sourceObj.excludeMetadataSets) {
-            unionOfArrays = unionOfArrays.filter((obj) => {
-                return !this.sourceObj.excludeMetadataSets.includes(obj.url);
-            });
-        }
-
-        return unionOfArrays;
-    }
-
-
-    async getSearchResults(metadataSet, params) {
-        let url;
-
-        if (this.doAutopopulateMetadataSets) {
-            /* GET #{api-root-url}#{metadataset-relative-url}/concepts/ */
-            url = this.rootUrl + metadataSet.url + "/concepts/";
-            if (this.verbose) url += "?verbose=true";
-            if (params.limit) url += "&limit=" + params.limit;
-            if (params.pageNum) url += "&page=" + params.pageNum;
-            if (params.filterValues) {
-                for (let [key, value] of Object.entries(params.filterValues)) {
-                    if (value === "All") continue;
-                    url += "&" + key + "=" + '"' + value + "\"";
-                }
-            }
-        }
-        else
-            url = metadataSet.attributes.url;
-
-        if (params.inputSearch) url += "&q=*" + params.inputSearch + "*";
-
-        //.. todo: retire this code
-        switch (metadataSet.id) {
-            case 'referenceIndicators':
-                url = url + "/concepts/?verbose=true&limit=0&conceptClass=\"Reference+Indicator\"";
-                break;
-            case 'dataElements':
-                url = url + "concepts/?verbose=true&conceptClass=\"Data+Element\"&limit=10&page=1";
-                break;
-        }
-
-        // todo: now we are expecting that JSONData is in fact array of json objects
-        let entries = await getJSONDataFromAPI(url);
-        let filterAttributes = this.filterConfig.metadataSets.find(item => item.id == metadataSet.id);
-        let table;
-
-        if (!filterAttributes) {
-            filterAttributes = this.filterConfig.metadataSets[0]; // Maybe the filter config we have will work on this new unmarked item. Also, we may want the filterConfig.metadataSets to be an array
-        }
-
-        table = super.createTableForResourceWithFilter(filterAttributes, entries);
-        table.totalEntries = parseInt(entries.numFound) || null;
-        return table;
-    }
-
-
-    // this is implemented from super class
-    prepareSourcesQuery() {
-        if (this.rootUrl == null || this.ownerTypeStem == null || this.ownerId == null)
-            throw new Error("One attribute is unspecified: Root url is" + this.rootUrl + "ownerTypeStem is " + this.ownerTypeStem + " ownerId is " + this.ownerId);
-
-        return this.rootUrl + "/" + this.ownerTypeStem + "/" + this.ownerId + "/sources/?limit=0/";
-    }
-
-    getCollectionsQuery() {
-        if (this.rootUrl == null || this.ownerTypeStem == null || this.ownerId == null)
-            throw new Error("One attribute is unspecified: Root url is" + this.rootUrl + "   ownerTypeStem is " + this.ownerTypeStem + "   ownerId is " + this.ownerId);
-
-        return this.rootUrl + "/" + this.ownerTypeStem + "/" + this.ownerId + "/collections/?limit=0";
-    }
-
-    getSourcesQuery() {
-        if (this.rootUrl == null || this.ownerTypeStem == null || this.ownerId == null)
-            throw new Error("One attribute is unspecified: Root url is" + this.rootUrl + "   ownerTypeStem is " + this.ownerTypeStem + "   ownerId is " + this.ownerId);
-
-        return this.rootUrl + "/" + this.ownerTypeStem + "/" + this.ownerId + "/sources/?limit=0";
-    }
-}
-
-export class RainbowConnector extends Connector {
-    constructor(sourceObj, sourceConfigObj) {
-        super(sourceObj, sourceConfigObj);
-    }
-
-    //.. is getMetadatasets handled by super class?
-    async getSearchResults(metadataSet, params) {
-        let url = metadataSet.attributes.url;
-        let options = {
-            "format": "json"
-        }
-        let entries = await getJSONDataFromAPI(url, options);
-        console.log(entries);
-
-        throw new Error("Todo: implement!");
-    }
-}
-
-
-export class FhirConnector extends Connector {
-
-    constructor(sourceObj, sourceConfigObj) {
-        super(sourceObj, sourceConfigObj);
-    }
-
-    async getSearchResults(metadataSet) {
-        let url = metadataSet.attributes.exampleSearchRequest;
-        let results = await getJSONDataFromAPI(url);
-
-        let headers;
-        let keys;
-
-        switch (metadataSet.id) {
-            default: //case 'Questionnaire':
-                headers = ["ID", "Name", "Resource Type"];
-                keys = ["resource.id", "resource.title", "resource.resourceType"];
-                return super.createTableForResourceWithHeaders(headers, keys, results.entry, true);
-        }
-    }
-
-    async getDetails() {
-
-    }
-}
-
-
-export function createConnector(sourceObj, sourceConfig, filterConfig) {
-    let id = sourceObj.sourceProfile
-    let sourceConfigObj = findSourceConfigObj(sourceConfig, id);
-    let connector = new Connector(sourceObj, sourceConfigObj, filterConfig);
-    //console.log("%c creating connector of ", "color:green", id);
-    switch (sourceObj.connector.id) {
-        case 'OclConnector':
-            connector = new OclConnector(sourceObj, sourceConfigObj, filterConfig);
-            break;
-        case 'FhirConnector':
-            connector = new FhirConnector(sourceObj, sourceConfigObj);
-            break;
-        case 'PepfarQmapConnector':
-            //.. Todo: implement
-            // connector = new GenericConnector(connector);
-            break;
-        case 'RainbowConnector':
-            connector = new RainbowConnector(sourceObj, sourceConfigObj);
-            break;
-        case 'dhis2':
-            //.. Todo: implement
-            break
-    }
-    return connector;
-}
-
-
-
-
-function findSourceConfigObj(sourceConfig, id) {
-    let sourceConfigObj = sourceConfig.sourceProfiles.find(obj => obj.id == id);
-    if (sourceConfigObj == null) {
-        throw new Error("Connector " + id + " is not implemented in sourceconfig file");
-    }
-    else {
-        return sourceConfigObj;
-    }
-
-}
