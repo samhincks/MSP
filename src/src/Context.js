@@ -10,7 +10,7 @@ let initDomain = domainConfig.domains[0];
 if (window.location.pathname.startsWith('/datainterface')) initDomain = domainConfig.domains[1];
 if (window.location.pathname === '/datainterface/ciel') initDomain = domainConfig.domains[1];
 if (window.location.pathname === '/datainterface/rainbow') initDomain = domainConfig.domains[2];
-// todo: fix this hack by proper usage of history
+// todo: fix this hack by proper usage of h-istory
 
 let initSources = initDomain.sources;
 let initSourceOfDomain = initSources[0];
@@ -46,6 +46,7 @@ export const initialState = {
     entries: [],
     names: []
   }, // searchResults for a metadataset as retrieved with API request
+  displayedResults: null, //  only set if searchResults lacks paging
   dataElements: [], //.. same as searchResults in vocabulary of PepfarDataView, todo: reconcile
   filterValues: {},
   limit: 25,

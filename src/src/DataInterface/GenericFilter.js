@@ -7,7 +7,6 @@ import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import Paper from '@material-ui/core/Paper';
 import Shortcut from '../AppShell/Shortcut';
-import { getCodeListMap } from '../currentCodelist.js';
 import { useStateValue } from '../ContextSetup';
 
 const useStyles = makeStyles(theme => ({
@@ -118,15 +117,18 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-
+/**
+ * Generic Filter designed to populate filterValues from 
+ * searchResults.attributes which are populated at the discretion of the Connector.
+ * They could be defined in attributeConfig.json with the metadataset.
+ * Todo: implement the capacity to create local filterValues when searchResults exist
+ * but lacks attributes. Possibly, scourge through the data and find the attributes with attributes
+ * with a small number of possible values.  
+ */
 export default function GenericFilter() {
     const classes = useStyles();
 
     const [{ filterValues, searchResults }, dispatch] = useStateValue();
-
-
-    /*Get everything and search locally */
-
 
     // initalize filter values for search result attributes
     // if search results change (but not underlying attributes) then these
@@ -137,11 +139,19 @@ export default function GenericFilter() {
             let attribute = searchResults.attributes[index];
             initialValues[attribute.key] = "All";
         }
+
+        // if there are searchResults but not filter attributes
+        if (Object.keys(initialValues).length === 0 && initialValues.constructor === Object) {
+            // console.log("%c no filter values for obj", "color:blue");
+            // todo implement local filters 
+        }
         dispatch({
             type: "changeFilterValues",
             filterValues: initialValues
         })
     }, []); //.. todo figure out when this needs to be initialized
+
+
 
 
     return (

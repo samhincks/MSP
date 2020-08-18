@@ -1,4 +1,4 @@
-import React, { useState, Fragment, useEffect } from 'react';
+import React, { useState, Fragment, useEffect, useRef } from 'react';
 import styled from 'styled-components'
 import { useStateValue } from '../ContextSetup';
 import Input from '@material-ui/core/Input';
@@ -8,6 +8,7 @@ import TablePagination from '@material-ui/core/TablePagination';
 
 import { makeStyles } from '@material-ui/core/styles';
 import LinearProgress from '@material-ui/core/LinearProgress';
+
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -25,18 +26,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-
-const DataSetsGrid = styled.div`
-    /* display: 'grid';
-    gap: '1rem';
-    grid-template-columns: 'repeat(auto-fill, minmax(240px, 1fr))'; */
-    display: flex;
-    justify-content: space-evenly;
-    align-items: center;
-    flex-wrap: wrap;
-    padding-bottom: 50px;
-`
-
+//.. Todo deprecate this code, using its essence for local filtering and search
 const SearchDataSets = () => {
     const [{ connector }, dispatch] = useStateValue();
     const updateDataSets = (e) => {
@@ -56,38 +46,77 @@ const SearchDataSets = () => {
 const SearchResultsContainer = styled.div`
     
 `
-
-
+/* The MetaDataView is instantiated by the DataInteface and dispatches searchResults
+obtained from the Connector (filter and search also can update SearchResults)
+When SearchResults change, then new data is passed to CustomTable. If DisplayResults 
+contains data, which is the case if the connector's search results have set
+a flag for lacking Paging (which could be a domain config level attribute) then
+Display Results are sent to the Custom table. Todo: These Display Results may be reused
+to create local filtering and search as well as local paging, with a consideration to possible side effects */
 export default function MetaDataView() {
-    const [{ metadataSet, searchResults, connector, filterValues, limit, pageNum }, dispatch] = useStateValue();
+    const [{ metadataSet, searchResults, connector, filterValues, limit, pageNum, displayedResults }, dispatch] = useStateValue();
+
+    //.. warning changing this value won't register until next renderhttps://stackoverflow.com/questions/54069253/usestate-set-method-not-reflecting-change-immediately
+    let inLocallyBrowsableResults = useRef(false); //.. should only become true if results return inLocallyBrowsable = true
     const classes = useStyles();
 
     async function updateSearchResults() {
         if (metadataSet == null) return;
-        console.log("%c running with page", "color:brown", pageNum)
+
         let params = {
             filterValues: filterValues,
             limit: limit,
             pageNum: pageNum
         }
-        dispatch({
-            type: 'changeSearchResults',
-            searchResults: {}
-        });
 
-        const searchResults = await connector.getSearchResults(metadataSet, params);
-        //console.log("%c searchResults is ", "color:purple", searchResults)
+        if (!inLocallyBrowsableResults.current) {
+            const searchResults = await connector.getSearchResults(metadataSet, params);
+            //console.log("%c searchResults is ", "color:purple", searchResults)
 
-        dispatch({
-            type: 'changeSearchResults',
-            searchResults: searchResults
-        });
+            dispatch({
+                type: 'changeSearchResults',
+                searchResults: searchResults
+            });
+
+            if (searchResults.lacksPaging) {
+                setPageinSearchResults(searchResults);
+            }
+        }
+        else { //. if in locallybrowsable
+            setPageinSearchResults(searchResults);
+        }
     }
+
+    //.. If the results from aPI lack paging, then this enables browsing locally
+    function setPageinSearchResults(results) {
+        let start = (pageNum - 1) * limit;
+        let end = (pageNum - 1) * limit + limit;
+        let slicedResults = results.entries.slice(start, end);
+        dispatch({
+            type: 'changeDisplayedResults',
+            displayedResults: slicedResults
+        });
+        inLocallyBrowsableResults.current = true;
+    }
+
 
     // Hook tied to changes in domain, source, and metadataSet
     useEffect(() => {
         updateSearchResults()
-    }, [metadataSet, limit, pageNum]);
+    }, [limit, pageNum]);
+
+    useEffect(() => {
+        inLocallyBrowsableResults.current = false;
+        dispatch({
+            type: 'changeSearchResults',
+            searchResults: {}
+        });
+        dispatch({
+            type: 'changeDisplayedResults',
+            displayedResults: null
+        });
+        updateSearchResults()
+    }, [metadataSet]);
 
 
     //.. todo implement serch
@@ -103,13 +132,8 @@ export default function MetaDataView() {
             {searchResults && searchResults.names && searchResults.names.length > 0 && <CustomTable
                 tableHeaderColor="warning"
                 tableHead={searchResults.names}
-                tableData={searchResults.entries} />}
+                tableData={displayedResults || searchResults.entries} />}
 
-            {/*<DataSetsGrid>
-                {searchResults.entries && searchResults.entries.map(resource =>
-                    <MinimalDataSetView key={resource.id} resource={resource} />
-                )}
-                </DataSetsGrid>*/}
             <PageContainer></PageContainer>
 
         </SearchResultsContainer>
@@ -194,68 +218,11 @@ export function LinearIndeterminate() {
     return (
         <div className={classes.root}>
             <LinearProgress />
-            <LinearProgress color="secondary" />
+            <LinearProgress color="primary" />
         </div>
     );
 }
 
-
-
-const DataSetContainer = styled.div`
-    min-width: 100px;
-    min-height: 100px;
-    border-radius: 5%;
-    background-color: lightblue;
-    margin: 2%;
-    padding: 5%;
-`
-
-const MinimalDatasetContainer = styled.div`
-    width: 100%;
-    border-radius: 3%;
-    background-color: lightblue;
-    margin: 1%;
-    padding: 1%;
-`
-
-
-const DataSetView = (props) => {
-    return (
-        <DataSetContainer>
-            <h2>{props.dataset.getTitle()}</h2>
-            {props.dataset && props.dataset.descriptions && props.dataset.descriptions[0] && <p>{props.dataset.descriptions[0].description}</p>}
-        </DataSetContainer>
-    )
-}
-
-const MinimalDataSetView = (props) => {
-    const [{ connector }, dispatch] = useStateValue();
-    // Function should make the details section appear by use of the selected data element global variable.
-    // It should call the connector which returns the selected Data Element. Then it should dispatch 
-    // a selection to selected data lement with the details 
-    async function handleDataViewClick() {
-        const details = await connector.getDetails();
-    }
-
-    return (
-        <MinimalDatasetContainer
-            onClick={handleDataViewClick}
-        >
-            <p>{props.resource.title}</p>
-        </MinimalDatasetContainer>
-    )
-}
-
-
-// Information about datasets
-
-// Title
-
-// Description
-
-// Image
-
-// Link
 
 /**
  *

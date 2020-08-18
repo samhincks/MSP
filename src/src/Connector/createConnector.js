@@ -15,7 +15,7 @@ export function createConnector(sourceObj, sourceConfig, attributeConfig) {
             connector = new OclConnector(sourceObj, sourceConfigObj, attributeConfig);
             break;
         case 'FhirConnector':
-            connector = new FhirConnector(sourceObj, sourceConfigObj);
+            connector = new FhirConnector(sourceObj, sourceConfigObj, attributeConfig);
             break;
         case 'PepfarQmapConnector':
             //.. Todo: implement

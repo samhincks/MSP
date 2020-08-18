@@ -39,13 +39,15 @@ const getTreeItemsFromData = treeItems => {
     return treeItems.map(treeItemData => {
         let children = undefined;
         if (treeItemData.children && treeItemData.children.length > 0) {
+            //console.log(treeItemData.children)
             children = getTreeItemsFromData(treeItemData.children);
         }
+        console.log(treeItemData.id + "children are ", children)
         return (
             <TreeItem
                 key={treeItemData.id}
                 nodeId={treeItemData.id}
-                label={treeItemData.id + ": " + treeItemData.name}
+                label={treeItemData.name + ": " + treeItemData.value}
                 children={children}
             />
         );
@@ -55,7 +57,7 @@ const getTreeItemsFromData = treeItems => {
 
 const DataTreeView = ({ treeItems }) => {
     const classes = useStyles();
-
+    console.log(treeItems)
     return (
         <div >
             <TreeView
@@ -83,7 +85,7 @@ function getModalStyle() {
 const ModalContent = styled.div`
 `
 
-export default function DetailsView() {
+export default function ModalDetailsView() {
     const [{ details }, dispatch] = useStateValue();
     const classes = useStyles();
     const [modalStyle] = React.useState(getModalStyle);
@@ -125,7 +127,8 @@ export default function DetailsView() {
         description = "err";
         attributes = [];
     }
-    let showAll = false;
+
+    // Todo: fix so that each element has a unique id in the details view
     return (
         <Modal
             open={open}

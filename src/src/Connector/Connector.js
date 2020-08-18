@@ -154,7 +154,8 @@ export default class Connector {
                 - name - the value with key
                 - children - any sub objects or arrays of the object (created recursively)
      */
-    createDetailsStructureForResource(jsonObj, attributes) {
+    createDetailsStructureForResource(jsonObj, attributes, level) {
+        if (!level) level = 0;
         let retObjs = [];
         for (let key in jsonObj) {
             // Skip attribute if it's listed in our filterConfig ignore file 
@@ -162,18 +163,21 @@ export default class Connector {
 
             let value = jsonObj[key];
             let newObj = {};
-            newObj.id = key
+            newObj.id = key + level
 
             if (typeof value === 'string') {
-                newObj.name = value;
+                newObj.name = key;
+                newObj.value = value;
             }
             if (typeof value === 'object') {
                 newObj.name = key;
-                newObj.children = this.createDetailsStructureForResource(value, attributes);
+                newObj.value = "";
+                newObj.children = this.createDetailsStructureForResource(value, attributes, level + 1);
             }
             if (typeof value === 'array') { //.. not sure if this is separate case from object
                 newObj.name = key;
-                newObj.children = this.createDetailsStructureForResource(value, attributes);
+                newObj.value = ""
+                newObj.children = this.createDetailsStructureForResource(value, attributes, level + 1);
             }
             retObjs.push(newObj);
         }

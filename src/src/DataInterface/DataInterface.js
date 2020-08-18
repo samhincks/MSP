@@ -9,7 +9,7 @@ import { useStateValue } from '../ContextSetup';
 import SourceSelector from './SourceSelector';
 import MetaDataView from './MetaDataView';
 import PepfarDataView from './PepfarDataView';
-import DetailsView from './ModalDetailsView'; // the string of the file name could be good way to implement custom components
+import ModalDetailsView from './ModalDetailsView';
 import PepfarFilterPanel from './PepfarFilterPanel';
 import GenericFilter from './GenericFilter';
 //import PepfarDetailsView from './PepfarDetailsView';
@@ -49,39 +49,47 @@ const DataInterfaceContainer = styled.div`
     display:flex;
     width:100%;
     `
+//.. add custom component configured in domainConfig to componentsMap 
+const componentsMap = { SourceSelector, GenericFilter, MetaDataView, SearchBar, ModalDetailsView };
 
+function getComponent(componentName) {
+    const DynamicComponent = componentsMap[componentName];
+    if (DynamicComponent)
+        return <DynamicComponent />;
+    else {
+        console.log("%c Could not find component ", "color:red", componentName);
+        return null;
+    }
+}
 
 export default function DataInterface() {
     const classes = useStyles();
     const [{ domain, source }, dispatch] = useStateValue();
     let removeSearch = false;
     if (source.removeSearch) removeSearch = source.removeSearch;
-    /*
-    //.. to do: figure out how to render a copmonent from a string. React.createElement()
-    https://reactjs.org/docs/jsx-in-depth.html#choosing-the-type-at-runtime */
-    /*
-    const FilterPanel = source.components.filter || null;
-    const DataView = source.components.view || MetaDataView;
-    const DetailsView = source.components.details || null;
-    console.log(FilterPanel, DataView, DetailsView);
-    */
+    let detailsComponent = source.detailsComponent || domain.detailsComponent;
+    let sourceSelectorComponent = source.sourceSelectorComponent || domain.sourceSelectorComponent;
+    let filterComponent = source.filterComponent || domain.filterComponent;
+    let searchComponent = source.searchComponent || domain.searchComponent;
+    let viewComponent = source.viewComponent || domain.viewComponent;
+
+
     return (
         <DataInterfaceContainer>
             {source.useCustomComponents && <PepfarFilterPanel />}
-
             <LeftArea>
-                <SourceSelector />
+                {sourceSelectorComponent ? getComponent(sourceSelectorComponent) : <SourceSelector />}
                 <FilterArea>
                     <Grid container>
-                        <GenericFilter />
+                        {filterComponent ? getComponent(filterComponent) : <GenericFilter />}
                     </Grid>
                 </FilterArea>
 
                 <DetailsArea>
-                    {source.usePopupDetails ? <DetailsView /> : <DetailsView />}
+                    {detailsComponent ? getComponent(detailsComponent) : <ModalDetailsView />}
                 </DetailsArea>
             </LeftArea>
-            <DataArea removeSearch={removeSearch} useCustomComponents={source && source.useCustomComponents} />
+            <DataArea removeSearch={removeSearch} searchComponent={searchComponent} viewComponent={viewComponent} />
         </DataInterfaceContainer>
     )
 }
@@ -98,15 +106,13 @@ const DataAreaContainer = styled.div`
 
 function DataArea(props) {
     const classes = useStyles();
+
     let removeSearch = false;
     if (props.removeSearch) removeSearch = props.removeSearch;
     return (
         <DataAreaContainer>
-            {!(removeSearch) && <SearchBar /> /*todo: PepfarSearchBar is specified in DomainConfig */}
-            {/*DataView && React.createElement(DataView)*/}
-            {props.useCustomComponents && <PepfarDataView />}
-            {/*source.useCustomPepfarComponents && <PepfarDetailsView />*/}
-            {!props.useCustomComponents && <MetaDataView />}
+            {!(removeSearch) && (props.searchComponent ? getComponent(props.searchComponent) : <SearchBar />)}
+            {props.viewComponent ? getComponent(props.viewComponent) : <MetaDataView />}
         </DataAreaContainer>
     )
 

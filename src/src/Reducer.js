@@ -82,6 +82,11 @@ export const reducer = (state, action) => {
         ...state,
         searchResults: action.searchResults,
       }
+    case 'changeDisplayedResults':
+      return {
+        ...state,
+        displayedResults: action.displayedResults,
+      }
 
     case 'setDetails':
       return {

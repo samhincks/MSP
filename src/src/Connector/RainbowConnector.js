@@ -2,6 +2,7 @@ import Connector from './Connector.js'
 import { getJSONDataFromAPI } from './apiQueries.js';
 
 export default class RainbowConnector extends Connector {
+
     constructor(sourceObj, sourceConfigObj, attributeConfig) {
         super(sourceObj, sourceConfigObj, attributeConfig);
     }
@@ -72,8 +73,10 @@ export default class RainbowConnector extends Connector {
                 searchResults = super.createTableForResourceWithHeaders(headers, keys, entries, true);
                 break;
         }
-        console.log("%c entries length", "color:green", entries)
-        searchResults.totalEntries = parseInt(entries.numFound) || entries.height || (entries.rows && entries.rows.length) || null;
+        console.log("%c entries length", "color:green", entries);
+        searchResults.totalEntries = parseInt(entries.numFound) || entries.length || entries.height || (entries.rows && entries.rows.length) || null;
+        searchResults.lacksPaging = true;// potentially change this in
+
 
         return searchResults;
     }

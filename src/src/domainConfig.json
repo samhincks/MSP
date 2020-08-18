@@ -68,6 +68,11 @@
             "backgroundImage": "",
             "initialAction": "loadSource('ciel')",
             "attributes": {},
+            "sourceSelectorComponent": "SourceSelector",
+            "filterComponent": "GenericFilter",
+            "detailsComponent": "ModalDetailsView",
+            "viewComponent": "MetaDataView",
+            "searchComponent": "SearchBar",
             "sources": [
                 {
                     "id": "ciel",
@@ -153,6 +158,7 @@
                     "sourceProfile": "imap",
                     "title": "IMAP",
                     "doAutopopulateMetadataSets": true,
+                    "removeSearch": true,
                     "connector": {
                         "id": "RainbowConnector",
                         "rootUrl": "https://test.ohie.datim.org:5000/ocl-imap",
@@ -165,6 +171,7 @@
                     "sourceProfile": "qmap",
                     "title": "QMAP",
                     "doAutopopulateMetadataSets": true,
+                    "removeSearch": true,
                     "connector": {
                         "id": "RainbowConnector",
                         "rootUrl": "https://test.ohie.datim.org:5000/ocl-qmap/",
@@ -176,6 +183,7 @@
                     "id": "mer",
                     "sourceProfile": "mer",
                     "title": "MER Codelist",
+                    "removeSearch": true,
                     "doAutopopulateMetadataSets": true,
                     "connector": {
                         "id": "RainbowConnector",
@@ -190,6 +198,7 @@
                     "id": "test.ohie.datim.org/hapi-fhir-jpaserver",
                     "sourceProfile": "fhir",
                     "title": "Test DATIM FHIR Server",
+                    "removeSearch": true,
                     "name": "Test FHIR server for DATIM",
                     "description": "Test FHIR server for DATIM",
                     "initialAction": "loadMetadataset()",

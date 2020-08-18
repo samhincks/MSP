@@ -50,9 +50,12 @@ const useStyles = makeStyles(theme => ({
         color: '#000000'
     },
     shortcutButtonSelected: {
+        paddingLeft: '10px',
+        justifyContent: "left",
         color: '#000000',
         backgroundColor: '#C1A783',
         width: '100%',
+        minWidth: '250px',
         cursor: 'pointer',
         fontSize: '1.0em',
         '&:hover, &:focus': {
@@ -81,6 +84,9 @@ const MetadataSetContainer = styled.div`
 const MetadataSetTab = styled.div`
     margin:2px
 `
+
+/* Source Selector gives choice of Source and MetadataSet
+ */
 export default function SourceSelector() {
     let attributes = {}
     attributes.color = "blue";
@@ -104,6 +110,10 @@ export default function SourceSelector() {
             dispatch({
                 type: 'changeSearchResults',
                 searchResults: {}
+            });
+            dispatch({
+                type: 'setPageNum',
+                pageNum: 1
             });
         }
 
@@ -129,7 +139,7 @@ export default function SourceSelector() {
                         <SelectContainer>
                             <InputLabel shrink id="demo-simple-select-placeholder-label-label">
                                 Source
-              </InputLabel>
+                            </InputLabel>
                             <Select value={source} onChange={(e) => updateSource(e.target.value)} labelId="label" id="select">
                                 {sources.map(source =>
                                     <MenuItem key={source.id} value={source}>{source.title}</MenuItem>
@@ -152,19 +162,21 @@ export default function SourceSelector() {
 }
 
 const MetadataSetButton = (props) => {
-    const [{ metadataSets }, dispatch] = useStateValue();
+    const [{ metadataSets, metadataSet }, dispatch] = useStateValue();
     let classes = useStyles(props);
     //console.log("%c initial state", "color:green", props.initState)
 
     //.. the component to update when metadataSets is changed (which it is when the async call is returned in Header.js in updateMetadatasets).
-    const updateMetadataset = (metadataSet) => {
+    const updateMetadataset = (metadataSet, target) => {
         props.setState(false);
         dispatch({
             type: 'changeMetadataSet',
             metadataSet: metadataSet
         })
-        console.log("%c initial state", "color:green", props.initState);
-
+        dispatch({
+            type: 'setPageNum',
+            pageNum: 1
+        });
     }
 
     return (
@@ -172,9 +184,9 @@ const MetadataSetButton = (props) => {
             <Button variant="outlined"
                 key={props.metadataSet.id || props.metadataSet.short_code}
                 value={props.metadataSet}
-                onClick={() => updateMetadataset(props.metadataSet)}
+                onClick={(e) => updateMetadataset(props.metadataSet, e.target)}
                 color="primary"
-                className={classes.shortcutButton} >
+                className={props.metadataSet.id === metadataSet.id ? classes.shortcutButtonSelected : classes.shortcutButton} >
                 <LocalOfferOutlinedIcon style={{ color: '#1D5893' }} />
                 {props.metadataSet.title || props.metadataSet.name}
             </Button>
