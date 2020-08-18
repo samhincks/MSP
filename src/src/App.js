@@ -15,6 +15,7 @@ import Indicators from './AppShell/Indicators';
 import Compare from './AppShell/Compare';
 import CompareIndicators from './AppShell/CompareIndicators';
 import DataElementDetails from './AppShell/DataElementDetails';
+import IndicatorDetails from './AppShell/IndicatorDetails';
 import { StateProvider } from './ContextSetup';
 import DataInterface from './DataInterface/DataInterface'
 
@@ -134,7 +135,7 @@ export default function App() {
             >
               {/* <MenuIcon /> */}
             </IconButton>
-            <Header history={history} />
+            <Header />
           </Toolbar>
         </AppBar>
         <Router history={history}>
@@ -159,17 +160,18 @@ export default function App() {
             <Switch>
               <Redirect from="/home" to="/" />
               <Route exact path="/" component={Welcome} />
-              <Route path="/codelist" component={Codelist} />
-              <Route path="/dataElementDetail" component={DataElementDetails} />
-              <Route path="/referenceIndicator" component={ReferenceIndicator} />
-              <Route path="/indicators" component={Indicators} />
+              <Route exact path="/codelist" component={Codelist} />
+              <Route exact path="/codelist/dataElementDetail" component={DataElementDetails} />
+              <Route exact path="/indicators/indicatorDetail" component={IndicatorDetails} />
               <Route path="/datainterface" component={DataInterface} />
+              <Route path="/referenceIndicator" component={ReferenceIndicator} />
+              <Route exact path="/indicators" component={Indicators} />
               <Route path="/codelist/indicator" component={ReferenceIndicator} />
               <Route path="/about" component={About} />
               <Route exact path="/index.html" component={Welcome} />
               <Route path="/referenceIndicator/:id" component={ReferenceIndicator} />
-              <Route path="/compare" component={Compare} />
-              <Route path="/compareIndicators" component={CompareIndicators} />
+              <Route exact path="/codelist/compare" component={Compare} />
+              <Route exact path="/indicators/compareIndicators" component={CompareIndicators} />
               <Route component={NotFound} />
             </Switch>
           </main>

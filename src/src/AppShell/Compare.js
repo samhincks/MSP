@@ -21,6 +21,7 @@ import Button from '@material-ui/core/Button';
 import { getConfig } from '../config.js';
 import { useHistory, useLocation } from "react-router";
 import LinearProgress from '@material-ui/core/LinearProgress';
+import Breadcrumb from './../Components/Breadcrumb';
 
 const useStyles = makeStyles(theme => ({
   margin: {
@@ -31,11 +32,13 @@ const useStyles = makeStyles(theme => ({
     display: 'none'
   },
   container: {
-    maxWidth: '1200px',
+    maxWidth: '1600px',
     margin: '0 auto',
     paddingTop: '30px',
     paddingLeft: '15px',
-    paddingRight: '15px'
+    paddingRight: '15px',
+    flex: 1,
+    marginBottom: '80px'
   },
   heroContainer: {
     margin: '0 auto',
@@ -493,8 +496,17 @@ export default function Compare() {
 
       }
 
+      
+      if (tempDEs.length > 1) {
+        if (tempDEs[0].concept_class != tempDEs[1].concept_class) {
+          setErrorDisplay('Unable To Compare Data Elements to Indicators')
+          deMappings = {}
+          throw new Error('Unable To Compare Data Elements to Indicators')
+        }
+      }
       setSelectedDatim(tempDEs);
       setMappings(deMappings);
+
       Object.values(tempDEs).map(
         value => {
           if (dataElements['Short Name']) {
@@ -602,21 +614,21 @@ export default function Compare() {
               value.extras['Applicable Periods'] ? (value.extras['Applicable Periods'].length > 0 ? (Object.keys(value.extras['Applicable Periods']).map(
 
                 key =>
-
-                  value.extras['Applicable Periods'][key] + ", "
-
+                key != value.extras['Applicable Periods'].length - 1 ?
+                value.extras['Applicable Periods'][key] + ", "
+                : value.extras['Applicable Periods'][key]
               )
               ) : "--") : "--")
-              dataElements['Applicable Periods'] = types
+            dataElements['Applicable Periods'] = types
           } else {
             let types = []
             types.push(
               value.extras['Applicable Periods'] ? (value.extras['Applicable Periods'].length > 0 ? (Object.keys(value.extras['Applicable Periods']).map(
 
                 key =>
-
-                  value.extras['Applicable Periods'][key] + ", "
-
+                key != value.extras['Applicable Periods'].length - 1 ?
+                value.extras['Applicable Periods'][key] + ", "
+                : value.extras['Applicable Periods'][key]
               )
               ) : "--") : "--")
             dataElements['Applicable Periods'] = types
@@ -638,7 +650,7 @@ export default function Compare() {
 
   }, [])
 
-  const loadMappings = async function (){
+  const loadMappings = async function () {
     let tempDEs = []
     for (let i = 1; i <= [...params.keys()].length; i++) {
       if (params.get('id' + i)) {
@@ -648,114 +660,114 @@ export default function Compare() {
         tempDEs.push(de[params.get('id' + i)])
       }
       setSelectedDatim(tempDEs)
-}
+    }
   }
   const table = function () {
     //!deMappings[datim.id] ? getMappings(datim.id) : ''
     return (
       <div className={classes.compareRowColumn}>
-      { deloading ?
-                    <div>
-                        <LinearProgress mode="indeterminate" />
-                        <div style={{ paddingTop: '1rem', paddingLeft: '1rem' }}>Loading data elements ...</div>
-                    </div> :
-                    (
-      <div className={classes.compareRowColumn} key={Math.random()}>
-        <ExpansionPanel className={classes.expandPanel}>
-          <ExpansionPanelSummary
-            //expandIcon={<ExpandMoreIcon />}
-            aria-controls="panel3b-content"
-            id="panel3b-header"
-         // onClick={() =>loadMappings()}
-          >
-
-            <Table className={classes.comboTable} aria-label="simple table">
-              <TableBody>
-                <TableRow><TableCell></TableCell>
-                  {dataElementMatrix['Display Name'] ? (dataElementMatrix['Display Name']).map(
-                    name =>
-
-                      // {/* <div className={classes.compareCardSummary}> */}
-                      // {/* <div className={classes.compareTitle}> */}
-                      // {/* <div className={classes.compareCardText}>DATIM Data Element: </div> */}
-                      <TableCell>
-                        <div className={`${classes.compareTitleColumn} ${classes.fixedTop}`}>
-                          {name}
-                        </div></TableCell>
-                    //   {/* <div className={classes.compareCardText}>DATIM UID: <strong>{datim.external_id}</strong></div> */}
-                    // {/* </div> */}    
-                  ) : ''}
-                </TableRow>
-                {Object.keys(dataElementMatrix).map(
-                  key =>
-                    <TableRow>
-                      <TableCell><strong>{key}</strong></TableCell>
-                      {Object.values(dataElementMatrix[key]).map(value =>
-                        <TableCell>{value}</TableCell>
-                      )}
-                    </TableRow>
-                )
-                }
-                {/* <div className={classes.tableContainer} key={Math.random()}>
-               {/* data element Disaggregations */}
-                {/* <strong>Disaggregations</strong>:<br />  */}
-
-                {/* <Table className={classes.table} aria-label="simple table">
-                 <TableHead> */}
-                 <TableRow key={Math.random()} style={{verticalAlign: 'top'}}>
-                 <TableCell></TableCell>
-                  <TableCell style={{textAlign: 'right'}}><h3><strong>Disaggregations</strong></h3></TableCell>
-                  <TableCell></TableCell>
-                  </TableRow>
-                  <TableRow><TableCell></TableCell>
-                  {dataElementMatrix['Display Name'] ? (dataElementMatrix['Display Name']).map(
-                    name =>
-                      <TableCell>
-                        <div className={`${classes.compareTitleColumn} ${classes.fixedTop}`}>
-                          {name}
-                        </div></TableCell> 
-                  ) : ''}
-                </TableRow>
-                <TableRow key={Math.random()} style={{verticalAlign: 'top'}}>
-                  <TableCell></TableCell>
-                  {selectedDatim.map(datim =>
-                    // !deMappings[datim.id] ? getMappings(datim.id) : ''
-                    <TableCell>
-                      <TableRow >
-                            <TableCell><strong>Name</strong></TableCell>
-                            <TableCell><strong>Code</strong></TableCell>
-                            </TableRow> 
-                    {(mappings[datim.id]) ? Object.keys(Object(mappings[datim.id])).map(
-
-                      key =>
-                        Object(mappings[datim.id])[key].map_type === 'Has Option' ? (
-                          
-                            
-                            <TableRow key={Math.random()} >
-                              <TableCell component="th" scope="row">
-                                {Object(mappings[datim.id])[key].to_concept_name}
-                              </TableCell>
-                              <TableCell component="th" scope="row">
-                                {Object(mappings[datim.id])[key].to_concept_code}
-                              </TableCell>
+        {deloading ?
+          <div>
+            <LinearProgress mode="indeterminate" />
+            <div style={{ paddingTop: '1rem', paddingLeft: '1rem' }}>Loading data elements ...</div>
+          </div> :
+          (
+            <div className={classes.compareRowColumn} key={Math.random()}>
+              
+              <ExpansionPanel className={classes.expandPanel}>
+                <ExpansionPanelSummary
+                  //expandIcon={<ExpandMoreIcon />}
+                  aria-controls="panel3b-content"
+                  id="panel3b-header"
+                // onClick={() =>loadMappings()}
+                >
+{ selectedDatim.length > 0 ?
+                  <Table className={classes.comboTable} aria-label="simple table">
+                    {Object.keys(dataElementMatrix) == 2 ?
+                      <colgroup>
+                        <col style={{ width: '10%' }} />
+                        <col style={{ width: '45%' }} />
+                        <col style={{ width: '45%' }} />
+                      </colgroup> :
+                      <colgroup>
+                        <col style={{ width: '10%' }} />
+                        <col style={{ width: '30%' }} />
+                        <col style={{ width: '30%' }} />
+                        <col style={{ width: '30%' }} />
+                      </colgroup>}
+                    <TableBody>
+                      <TableRow><TableCell></TableCell>
+                        {dataElementMatrix['Display Name'] ? (dataElementMatrix['Display Name']).map(
+                          name =>
+                            <TableCell>
+                              <div className={`${classes.compareTitleColumn} ${classes.fixedTop}`}>
+                                {name}
+                              </div></TableCell>   
+                        ) : ''}
+                      </TableRow>
+                      {Object.keys(dataElementMatrix).map(
+                        key =>
+                          <TableRow>
+                            <TableCell><strong>{key}</strong></TableCell>
+                            {Object.values(dataElementMatrix[key]).map(value =>
+                              <TableCell>{value}</TableCell>
+                            )}
+                          </TableRow>
+                      )
+                      }
+                      <TableRow key={Math.random()} style={{ verticalAlign: 'top' }}>
+                        <TableCell></TableCell>
+                        <TableCell style={{ textAlign: 'right' }}><h3><strong>Disaggregations</strong></h3></TableCell>
+                        <TableCell></TableCell>
+                      </TableRow>
+                      <TableRow><TableCell></TableCell>
+                        {dataElementMatrix['Display Name'] ? (dataElementMatrix['Display Name']).map(
+                          name =>
+                            <TableCell>
+                              <div className={`${classes.compareTitleColumn} ${classes.fixedTop}`}>
+                                {name}
+                              </div></TableCell>
+                        ) : ''}
+                      </TableRow>
+                      <TableRow key={Math.random()} style={{ verticalAlign: 'top' }}>
+                        <TableCell></TableCell>
+                        {selectedDatim.map(datim =>
+                          <TableCell>
+                            <TableRow >
+                              <TableCell><strong>Name</strong></TableCell>
+                              <TableCell><strong>Code</strong></TableCell>
                             </TableRow>
-                          
-                        ) : ''
-                    ) : ''}
-                    </TableCell>
-                  )}
-                </TableRow>
-              </TableBody>
-            </Table>
-          </ExpansionPanelSummary>
-          <ExpansionPanelDetails className={classes.panelDetail}>
+                            {(mappings[datim.id]) ? Object.keys(Object(mappings[datim.id])).map(
+
+                              key =>
+                                Object(mappings[datim.id])[key].map_type === 'Has Option' ? (
 
 
-          </ExpansionPanelDetails>
-        </ExpansionPanel>
+                                  <TableRow key={Math.random()} >
+                                    <TableCell component="th" scope="row">
+                                      {Object(mappings[datim.id])[key].to_concept_name}
+                                    </TableCell>
+                                    <TableCell component="th" scope="row">
+                                      {Object(mappings[datim.id])[key].to_concept_code}
+                                    </TableCell>
+                                  </TableRow>
+
+                                ) : ''
+                            ) : ''}
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    </TableBody>
+                  </Table>: ''}
+                </ExpansionPanelSummary>
+                <ExpansionPanelDetails className={classes.panelDetail}>
+
+
+                </ExpansionPanelDetails>
+              </ExpansionPanel> 
+            </div>
+          )}
       </div>
-                    ) }
-                    </div>
     )
   }
   const [dialogOpen, setDialogOpen] = React.useState(false);
@@ -765,12 +777,13 @@ export default function Compare() {
   const [deloading, setDELoading] = useState(false);
 
   const sortJSONByKey = function (data, key, direction) {
-    return data.sort(function (a, b) {
-      var x = a[key]; var y = b[key];
-      if (direction === 'asc') { return ((x < y) ? -1 : ((x > y) ? 1 : 0)); }
-      if (direction === 'desc') { return ((x > y) ? -1 : ((x < y) ? 1 : 0)); }
-      return true;
-    });
+    if (data)
+      return data.sort(function (a, b) {
+        var x = a[key]; var y = b[key];
+        if (direction === 'asc') { return ((x < y) ? -1 : ((x > y) ? 1 : 0)); }
+        if (direction === 'desc') { return ((x > y) ? -1 : ((x < y) ? 1 : 0)); }
+        return true;
+      });
   }
 
   const handleDialogClose = () => {
@@ -778,11 +791,11 @@ export default function Compare() {
   };
 
   const goBack = () => {
-    if (params.get('dataElementDetail')) {
-      history.push('/dataElementDetail?id=' + params.get('id1'))
-    } else {
-      history.goBack()
-    }
+    // if (params.get('dataElementDetail')) {
+    //   history.push('/dataElementDetail?id=' + params.get('id1'))
+    // } else {
+    history.goBack()
+    //}
   }
   const styles = theme => ({
     root: {
@@ -935,36 +948,38 @@ export default function Compare() {
 
   };
 
-  
+
   return (
     <ErrorBoundary>
-      <Grid container >
-        <Grid item xs={12}>
+      <div className={classes.container} >
 
-          <div className={classes.fixedTop}>
-              {/* <NavLink to="/codelist"> */}
+        <div className={classes.fixedTop}>
+          <Grid container >
+            <Grid xs={4}>
+              <Breadcrumb></Breadcrumb>
+            </Grid>
+            <Grid xs={4}>
+              <h2 className={classes.comparisonPanelTitle}>COMPARE DATA ELEMENTS</h2>                        </Grid>
+            <Grid xs={4}>
               <Button onClick={goBack} color="primary" variant="outlined" className={`${classes.actionButton} ${classes.closeComparePanel}`}
                 id="backButton"> Back</Button>
-              {/* </NavLink> */}
-              <h2 className={classes.comparisonPanelTitle}>DATA ELEMENT COMPARISON</h2>
-          </div>
-          {errorDisplay !== null ?
-            <div className={classes.errorMessage}>{errorDisplay}</div>
-            : null}
+            </Grid>
+          </Grid>
+        </div>
+        {errorDisplay !== null ?
+          <div className={classes.errorMessage}>{errorDisplay}</div>
+          : null}
 
-          {/* datim row */}
+        {/* datim row */}
 
-          <div className={classes.compareRow} >
+        <div className={classes.compareRow} >
 
-            {
-              table()
-            }
+          {
+            table()
+          }
 
-          </div>
-        </Grid>
-
-
-      </Grid>
+        </div>
+      </div>
     </ErrorBoundary>
   );
 }

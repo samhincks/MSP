@@ -34,6 +34,7 @@ import FormLabel from '@material-ui/core/FormLabel';
 import FormGroup from '@material-ui/core/FormGroup';
 import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
+import Link from '@material-ui/core/Link';
 
 import LinearProgress from '@material-ui/core/LinearProgress';
 import TablePagination from '@material-ui/core/TablePagination';
@@ -242,6 +243,10 @@ const useStyles = makeStyles(theme => ({
   },
   expansionPanelSummary:{
     borderBottom: '1px solid #C1A783',
+    color: '#000000',       
+        '&:hover, &:focus':{   
+          backgroundColor: '#eeeeee'
+        }
   },
   expansionPanelDetails:{
     paddingTop: '10px'
@@ -506,6 +511,7 @@ const useStyles = makeStyles(theme => ({
     const handleChangeRowsPerPage = event => {
       setRowsPerPage(parseInt(event.target.value, 10));
       setPage(0);
+      setPageForDatimIndicator(0);
       //setExpanded(false);
     };
     const [pageDatimIndicator, setPageForDatimIndicator] = React.useState(0);           
@@ -535,6 +541,7 @@ const useStyles = makeStyles(theme => ({
       const INDICATOR_PANEL = 0;
       const DATA_ELEMENT_PANEL = 1;
       const DATIM_INDICATOR_PANEL = 2;
+      const DELIMINATOR = "++";
       
     //get indicator and data-elements from context
     const [{ currentIndicator, matchDataElements, matchDatimIndicators }, dispatch] = useStateValue();
@@ -548,7 +555,7 @@ const useStyles = makeStyles(theme => ({
       setPanel(newPanel);            
       setErrorLoadDataElement(null);
       setErrorLoadDatimIndiator(null);
-      
+      console.log(currentIndicator);
       if (newPanel === DATA_ELEMENT_PANEL){       
         console.log("load data elements, page: " + page);
         // reload data element
@@ -563,6 +570,16 @@ const useStyles = makeStyles(theme => ({
           loadDatimIndicatorByIndicator(currentIndicator.id);
         }
       }
+    };
+
+    const copyToClipboard = str => {
+      const el = document.createElement('textarea');
+      el.value = str;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      //handleTooltipOpen()
     };
 
     const [formularPanel, setFormularPanel] = React.useState(0);
@@ -627,6 +644,7 @@ const useStyles = makeStyles(theme => ({
   
     const getIndicatorGroup = function (indicatorData) {     
       //console.log( "filter value: " + values.fiscal + " freq:" + values.frequency );
+      //console.log(indicatorData);
       var filteredByYearData = indicatorData.filter(function (data) {                
         if (values.frequency !== "" && values.fiscal !== "") {          
           return data.periodYear === values.fiscal && data.frequency.trim().toLowerCase() === values.frequency.trim().toLowerCase();
@@ -637,14 +655,19 @@ const useStyles = makeStyles(theme => ({
         }        
         return true;
       });
-      console.log("filteredByYearData:"); console.log(filteredByYearData);
-      const distinctGroup = [...new Set(filteredByYearData.map(item => item.group))];
-      distinctGroup.sort();           
+    
+      let distinctGroup = [...new Set(filteredByYearData.map(item => item.group))];
+      distinctGroup.sort();          
+      if (distinctGroup.includes("Other")){      
+        distinctGroup = distinctGroup.filter(group => group != "Other");       
+        distinctGroup.push("Other");       
+      }            
       return distinctGroup;      
     }
 
     const getFilteredIndicator = function (indicatorData) {  
-      console.log( "filter value: " + values.fiscal + " freq: " + values.frequency );     
+      console.log( "filter value: " + values.fiscal + " freq: " + values.frequency );    
+     
       var filteredByYearData = indicatorData.filter(function (data) {        
         if (values.frequency !== "" && values.fiscal !== "") {           
           return data.periodYear === values.fiscal && data.frequency.trim().toLowerCase() === values.frequency.trim().toLowerCase();
@@ -666,7 +689,7 @@ const useStyles = makeStyles(theme => ({
       indicatorItem.description = (indicatorOCL.descriptions && indicatorOCL.descriptions.length > 0) ? indicatorOCL.descriptions[0].description : "";        
       indicatorItem.created_on = indicatorOCL.created_on ? indicatorOCL.created_on : "";
       indicatorItem.updated_on = indicatorOCL.updated_on ? indicatorOCL.updated_on : "";        
-      indicatorItem.group = indicatorOCL.extras && indicatorOCL.extras["Indicator Group"] ? indicatorOCL.extras["Indicator Group"]: "";
+      indicatorItem.group = indicatorOCL.extras && indicatorOCL.extras["Indicator Group"] ? indicatorOCL.extras["Indicator Group"]: "Other";
       indicatorItem.level = indicatorOCL.extras && indicatorOCL.extras["Reporting level"] ? indicatorOCL.extras["Reporting level"]: "";
       indicatorItem.source = indicatorOCL.source;
       indicatorItem.frequency = indicatorOCL.extras && indicatorOCL.extras["Reporting frequency"] ? indicatorOCL.extras["Reporting frequency"]: "";
@@ -686,7 +709,9 @@ const useStyles = makeStyles(theme => ({
       indicatorItem.PEPFAR_support_definition = (indicatorOCL.extras && indicatorOCL.extras["PEPFAR-support definition"] ) ? indicatorOCL.extras["PEPFAR-support definition"] : "";
       indicatorItem.guiding_narrative_questions = indicatorOCL.extras && indicatorOCL.extras["Guiding narrative questions"] ? indicatorOCL.extras["Guiding narrative questions"]: "";
       indicatorItem.guidance_version = indicatorOCL.extras && indicatorOCL.extras["Guidance Version"] ? indicatorOCL.extras["Guidance Version"]: "";
-             
+      indicatorItem.uuid = indicatorOCL.uuid;
+      indicatorItem.id_uuid = indicatorOCL.id + "++" + indicatorOCL.uuid;
+      
       return indicatorItem;     
    }
 
@@ -698,8 +723,8 @@ const useStyles = makeStyles(theme => ({
   }
 
     //indicator that the app has mounted
-    const [init, setInit]= React.useState(false);
-    var queryIndicators = "https://api." + domain + "/orgs/" + org + "/sources/MER" + source + "/concepts/?verbose=true&limit=0&conceptClass=\"Reference+Indicator\""; 
+    const [init, setInit]= React.useState(false);    
+    var queryIndicators =  "https://api." + domain + "/orgs/" + org + "/collections/MER_REFERENCE_INDICATORS_FY" + values.fiscal.trim().substring(2,4) + "/concepts/?limit=0&verbose=true";
 
     const [, setError] = useState(null);
     const [errorLoadDataElement, setErrorLoadDataElement] = useState(null);
@@ -738,8 +763,7 @@ const useStyles = makeStyles(theme => ({
             `Warning indicators data is emtpy from OCL `
           );
         }        
-        
-        console.log("indicators: " + jsonData.length);
+               
         console.log(jsonData);
         var d = createIndicatorListForUI(jsonData);
         var sortedData = sortJSON(d, 'name', 'asc');
@@ -758,8 +782,9 @@ const useStyles = makeStyles(theme => ({
     
     
     // for Data Elements tab to get a list of data elements and their disags for the indicatorID
-    const loadDataElementsDataByIndicator = async (indicatorID)=> {      
-      var query = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + source +  '/concepts/?verbose=true&q=' + indicatorID + '&conceptClass="Data+Element"&limit=' + rowsPerPage + '&page=' + (page+1);
+    const loadDataElementsDataByIndicator = async (indicatorID)=> {   
+      
+      var query = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + source +  '/concepts/?verbose=true&q=' + indicatorID + '&conceptClass="Data+Element"&limit=' + rowsPerPage + '&page=' + (page+1)+ '&extras__Applicable+Periods=FY' + values.fiscal.trim().substring(2,4);
       console.log("loadDataElementsByIndicator: " + indicatorID + " query: " + query);     
       setDELoading(true);
       setErrorLoadDataElement(null);
@@ -830,9 +855,8 @@ const useStyles = makeStyles(theme => ({
       
     }
 
-    const loadDatimIndicatorByIndicator = async (indicatorID)=> {       
-      const query = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + source +  '/concepts/?verbose=true&q=' + indicatorID + '&conceptClass="Indicator"&limit=' + rowsPerPage + '&page=' + (pageDatimIndicator+1);
-        
+    const loadDatimIndicatorByIndicator = async (indicatorID)=> {           
+      const query = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + source +  '/concepts/?verbose=true&conceptClass="Indicator"&limit=' + rowsPerPage + '&page=' + (pageDatimIndicator+1) + '&extras__indicator=' + indicatorID;      
       console.log("loadDatimIndicatorByIndicator: " + indicatorID + " query: " + query); 
       setDatimIndicatorLoading(true);     
       setErrorLoadDatimIndiator(null);
@@ -842,6 +866,7 @@ const useStyles = makeStyles(theme => ({
           console.log(response);
           setDatimIndicatorLoading(false);
           setCountOfValues(0);
+          setPageForDatimIndicator(0);
           throw new Error(
             `Error when retrieve datim indicators ${response.status} ${response.statusText}`
           );
@@ -879,9 +904,9 @@ const useStyles = makeStyles(theme => ({
       
     }
 
-    var indicatorId = getIndicatorIdFromParam(location.pathname); // indicatorId from URL param
-    
-    useEffect(() => {            
+    var indicatorId = getIndicatorIdFromParam(location.pathname); // indicatorId from URL param    
+    useEffect(() => {  
+          
       loadIndicatorData(); 
       setInit(true);      
       setPage(0);
@@ -892,7 +917,7 @@ const useStyles = makeStyles(theme => ({
       if ( init  && indicatorId && indicatorId !== '' ) {                                      
           updateIndicator(indicatorId, panel);                           
         }                            
-    }, [indicatorId, page, rowsPerPage]);
+    }, [indicatorId, page, rowsPerPage, pageDatimIndicator]);
  
     async function getMappings(id) {          
       const queryMapping = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + source  + '/concepts/' + id + '/?includeMappings=true';
@@ -942,12 +967,20 @@ const useStyles = makeStyles(theme => ({
     };
   
     
-    const loadIndicatorDetailByIndicator =  async (indicatorID)=> {           
-      var query = "https://api." + domain + "/orgs/" + org + "/sources/MER" + source + "/concepts/" +  indicatorID + "/";      
+    const loadIndicatorDetailByIndicator =  async (indicatorID)=> {
+
+      let indicatorIDUuid = "";
+      if (indicatorID !== "" && indicatorID.includes(DELIMINATOR)){
+        indicatorIDUuid = indicatorID.split(DELIMINATOR);
+      }
+      
+     // var query = "https://api." + domain + "/orgs/" + org + "/sources/MER" + source + "/concepts/" +  indicatorID + "/";     
+      var query = "https://api." + domain + "/orgs/" + org + "/sources/MER" + source + "/concepts/" +  indicatorIDUuid[0] + "/" + indicatorIDUuid[1]+"/";      
       console.log("query indicator detail : " + query );
       setIndicatorDetailLoading(true);
       try {
         const response = await fetch(query);
+        //console.log(response);
         if (!response.ok) {
           console.log(response);
           setIndicatorDetailLoading(false);
@@ -983,15 +1016,16 @@ const useStyles = makeStyles(theme => ({
     }
 
   //update indicator details and matched data-element for selected indicator
-  function updateIndicator(indicatorId, panel){             
+  function updateIndicator(indicatorId, panel){           
     if (indicatorId === '' || !isValidIndicatorID(indicatorId) ) {      
       setErrorLoadIndicatorDetail("Invalid Indicator ID.");
       backtoDefault();
     }else {
       setErrorLoadIndicatorDetail(null);              
-      loadIndicatorDetailByIndicator(indicatorId);                    
+      loadIndicatorDetailByIndicator(indicatorId);        
+      const indicatorIdOnly = indicatorId.includes(DELIMINATOR) ?   indicatorId.split(DELIMINATOR)[0] : indicatorId;            
       if (panel && panel === DATA_ELEMENT_PANEL) {
-        loadDataElementsDataByIndicator(indicatorId);
+        loadDataElementsDataByIndicator(indicatorIdOnly);
       }else {// clear data elements
         dispatch({
           type: 'changeMatchDataElements',
@@ -999,7 +1033,7 @@ const useStyles = makeStyles(theme => ({
         })
       }
       if (panel && panel === DATIM_INDICATOR_PANEL) {      
-        loadDatimIndicatorByIndicator(indicatorId);
+        loadDatimIndicatorByIndicator(indicatorIdOnly);
       }else {// clear daim indicator
         dispatch({
           type: 'changeMatchDatimIndicators',
@@ -1033,7 +1067,7 @@ const useStyles = makeStyles(theme => ({
     
   function isValidIndicatorID(indicatorID) {   
     //allow only alphanumeric, hyphen, underscore    
-    if (!indicatorID.match(/^[0-9a-zA-Z-_]+$/)){
+    if (!indicatorID.match(/^[0-9a-zA-Z-_+]+$/)){
       return false;
     }else {
       return true;
@@ -1052,6 +1086,7 @@ const useStyles = makeStyles(theme => ({
 
   const handleNavLinkChange = event => {
     setPage(0);
+    setPageForDatimIndicator(0);
   }
 
   //set dropdown popup
@@ -1080,7 +1115,8 @@ const useStyles = makeStyles(theme => ({
       //console.log("indicatorListForUI:" + indicatorsListForUI.length);
       var indGroupTemp = getIndicatorGroup(indicatorsListForUI);        
       setIndicatorGroups(indGroupTemp);
-      var filteredInd = getFilteredIndicator(indicatorsListForUI);      
+      var filteredInd = getFilteredIndicator(indicatorsListForUI);  
+         
       setFilteredIndicatorsListForUI(filteredInd);          
     }    
   }, [values]);
@@ -1090,8 +1126,7 @@ const useStyles = makeStyles(theme => ({
     //if it's not the first time the app mounted
     //console.log("***** useEffect, run only when init change to true. init: " + init);
     
-    if(init && indicatorId !== ''){     
-      console.log("setPage to 0, update Indicator:" + indicatorId)
+    if(init && indicatorId !== ''){          
       setPage(0);
       updateIndicator(indicatorId, DATA_ELEMENT_PANEL);                           
     }    
@@ -1113,12 +1148,11 @@ const useStyles = makeStyles(theme => ({
         <ExpansionPanelDetails key={"detail_" + index} className={classes.indicatorList}>
           {
               filteredIndicatorsListForUI.filter(indicator => (indicator.group === indGroup && indicator.periodYear === values.fiscal))
-              .map(indicator =>{
-                //console.log(indicator.id);
+              .map(indicator =>{                
               return(
-                <div key={"group_" + index + indicator.id }  className={currentIndicator.name===indicator.name ? classes.indicatorListItemActive : deloading ? classes.indicatorListItemUnclickable : classes.indicatorListItem}>                                
-                 {currentIndicator.name===indicator.name || (panel && panel === DATA_ELEMENT_PANEL && deloading ) ? <div>{indicator.name}</div> : 
-                  <NavLink  to={"/referenceIndicator/" + indicator.id} onClick={handleNavLinkChange}><span style={{color: '#000000'}} >{indicator.name}</span></NavLink>  
+                <div key={"group_" + index + indicator.id }  className={currentIndicator.id === indicator.id  && currentIndicator.uuid === indicator.uuid ? classes.indicatorListItemActive : deloading ? classes.indicatorListItemUnclickable : classes.indicatorListItem}>                                
+                 {(currentIndicator.id ===indicator.id && currentIndicator.uuid === indicator.uuid ) || (panel && panel === DATA_ELEMENT_PANEL && deloading ) ? <div>{indicator.name}</div> : 
+                  <NavLink  to={"/referenceIndicator/" + indicator.id + DELIMINATOR + indicator.uuid} onClick={handleNavLinkChange}><span style={{color: '#000000'}} >{indicator.name}</span></NavLink>  
                  }                                                
                 </div>
               )                 
@@ -1158,8 +1192,8 @@ const useStyles = makeStyles(theme => ({
   };
 
   let downloadIndicatorURL = "";
-  if (currentIndicator) {
-    downloadIndicatorURL = "https://api." + domain + "/orgs/" + org + "/sources/MER/concepts/" + currentIndicator.id + "/";
+  if (currentIndicator) {   
+    downloadIndicatorURL = "https://api." + domain + "/orgs/" + org + "/sources/MER/concepts/" + currentIndicator.id + "/" + currentIndicator.uuid;
   }
 
   function getDEdetailValue(dataElement, field){
@@ -1375,251 +1409,25 @@ return (
       
       {/*  TO DO: consider to put this into a function (for loading) or a component (for reuse) */ }
       {matchDataElements.map(dataElement => (
-        <div key={dataElement.external_id}>
-          <ExpansionPanel className={classes.expansionPanel}   TransitionProps={{ unmountOnExit: true, mountOnEnter: true }}  
-                          onClick={() => dataElement.disags.length === 0 ? getMappings(dataElement.id) : null}>
-
-            {/* data elements summary */}
-            <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />} aria-controls="panel1a-content" id="panel1a-header" className={classes.expansionPanelSummary}>
-              <Grid container alignItems="center" >       
+        <div key={dataElement.external_id}>        
+              <Grid container alignItems="center"  className={classes.expansionPanelSummary} style={{padding: '4px'}}>       
                 <Grid item  xs={12} md={12}>         
-                  <Typography className={classes.heading}> 
-                   {dataElement.display_name}
+                  <Typography className={classes.heading}>                    
+                   <Link href={"/codelist/dataElementDetail?id=" + dataElement.id} style={{ textDecoration: 'underline' }}>{dataElement.display_name}</Link>          
                   </Typography>
                 </Grid>               
-                  <Grid item xs={12} md={3}  className={classes.chip}>                                        
-                    <span>{"UID: " + dataElement.external_id}</span>
+                  <Grid item xs={12} md={3}  className={classes.chip}>                                                            
+                    <Tooltip disableFocusListener title="Click to copy UID">
+                        <span className={classes.chip}
+                          onClick={() => copyToClipboard(dataElement.external_id)}
+                        >{"UID: " + dataElement.external_id}</span>
+                      </Tooltip>
                     </Grid>
                   <Grid item xs={12} md={3} className={classes.chip}>  
                     <span>{"Source: " + dataElement.extras.source} </span>                                                                                     
                   </Grid>
                   <Grid item xs={12} md={6} />
-              </Grid>         
-            </ExpansionPanelSummary>
-
-            <DataElementDetail dataElementDetail={dataElementDetail} classes={classes} detailPanel={detailPanel} toggleDetailDrawer={toggleDetailDrawer}/> 
-          {/* data elements details */}
-          <ExpansionPanelDetails className={classes.expansionPanelDetails}>
-            <Grid container>           
-              <Grid item xs={12} >
-                <Table className={classes.comboTable} aria-label="simple table">
-                  <TableBody>
-                    <TableRow>
-                      <TableCell style={{width: '20%'}} padding='none'><strong>Description</strong></TableCell>
-                      <TableCell padding='none'>
-                      {getDEdetailValue(dataElement, "description") !== "" ? getDEdetailValue(dataElement, "description")  : ""}  
-                      </TableCell>
-                  </TableRow>
-                  {
-                    getDEdetailValue(dataElement, "shortName") !== "" ?
-                    <TableRow>
-                    <TableCell  padding='none'><strong>Short Name</strong></TableCell>
-                    <TableCell padding='none'>
-                    {getDEdetailValue(dataElement, "shortName")}
-                    </TableCell>
-                  </TableRow>
-                  : null
-                  }
-                  {
-                    getDEdetailValue(dataElement, "code") !== "" ?
-                    <TableRow>
-                    <TableCell padding='none'><strong>Code</strong></TableCell>
-                    <TableCell padding='none'>
-                    {getDEdetailValue(dataElement, "code")}
-                    </TableCell>
-                  </TableRow>
-                  : null
-                  }                 
-                  {
-                    getDEdetailValue(dataElement, "indicator") !== "" ?
-                    <TableRow>
-                    <TableCell  padding='none'><strong>Indicator</strong></TableCell>
-                    <TableCell padding='none'>
-                    {getDEdetailValue(dataElement, "indicator")}
-                    </TableCell>
-                  </TableRow>
-                  : null
-                  }
-                   {
-                    getDEdetailValue(dataElement, "applicablePeriods") !== "" ?
-                    <TableRow>
-                    <TableCell  padding='none'><strong>Applicable Periods</strong></TableCell>
-                    <TableCell padding='none'>
-                    {getDEdetailValue(dataElement, "applicablePeriods")}
-                    </TableCell>
-                  </TableRow>
-                  : null
-                  }
-                  {
-                    getDEdetailValue(dataElement, "resultTarget") !== "" ?
-                    <TableRow>
-                    <TableCell padding='none'><strong>Result/Target</strong></TableCell>
-                    <TableCell padding='none'>
-                    {getDEdetailValue(dataElement, "resultTarget")}
-                    </TableCell>
-                  </TableRow>
-                  : null
-                  }
-                  {
-                    getDEdetailValue(dataElement, "datatype") !== "" ?
-                    <TableRow>
-                    <TableCell style={{width: '30%'}} padding='none'><strong>Data Type</strong></TableCell>
-                    <TableCell padding='none'>
-                    {getDEdetailValue(dataElement, "datatype")}
-                    </TableCell>
-                  </TableRow>
-                  : null
-                  }
-                  {
-                    getDEdetailValue(dataElement, "retired") !== "" ?
-                    <TableRow>
-                    <TableCell style={{width: '30%'}} padding='none'><strong>Retired</strong></TableCell>
-                    <TableCell padding='none'>
-                    {getDEdetailValue(dataElement, "retired")}
-                    </TableCell>
-                  </TableRow>
-                  : null
-                  }                  
-              </TableBody>
-            </Table>       
-            </Grid>
-
-            <Grid item xs={12} className={classes.expansionPanelLeft}>                        
-              <Button variant="outlined" className={classes.detailsButton} onClick={toggleDetailDrawer(dataElement, 'bottom', true)} color="primary">
-              View data element details
-              </Button>              
-            </Grid>
-
-       
-            {/* data element Disaggregations */}
-            <Grid item  xs={12} className={classes.comboTable}>
-              
-         {/* open the formula panel */}        
-        { 
-        <ExpansionPanel>
-          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />} aria-controls="panel1a-content"  id="panel1a-header" className={classes.formulaButton}>
-            <Typography className={classes.heading}><strong>Disaggregations and Derivations</strong></Typography>
-          </ExpansionPanelSummary>
-          <ExpansionPanelDetails  className={classes.expansionPanelDetails}>
-            <div className={classes.tableContainer} >                     
-              <Tabs value={formularPanel} onChange={handleFormularChange} className={classes.tabContainer}  classes={{ indicator: classes.bigIndicator }}>
-                <Tab label="DISAGGREGATIONS FORMULA" {...formularProps(0)} />
-                <Tab label="DISAGGREGATIONS LIST" {...formularProps(1)} />
-                {dataElement.extras && dataElement.extras.source === 'PDH' ? (<Tab label="DERIVATIONS" {...formularProps(2)} />) : <Tab label="" {...formularProps(2)} />}
-              </Tabs>
-
-              <FormularPanel value={formularPanel} index={0} className={classes.tabPanel}>                
-                <Grid container alignItems="center" justify="space-between">
-                  <Grid item xs={9}  >
-                    <div className={classes.tableContainer}>
-                    {(dataElement && dataElement.disags )?                                                    
-                        dataElement.disags.map(
-                          (item, index ) => 
-                            (index < dataElement.disags.length -1) ?                              
-                              (checked ? (<span key={"item_name" + item.code + index}> {item.code} + </span>) : (<span key={"item_code" + item.code + index}> {item.name.trim().substring(0, 1).toUpperCase() + item.name.trim().substring(1)}</span>))
-                            :                              
-                            (checked ? (<span key={"item_name" + item.code + index}> {item.code} </span>) : (<span key={"item_code" + item.code + index}>{item.name.trim().substring(0, 1).toUpperCase() + item.name.trim().substring(1)}  </span>))                                               
-                        )                           
-                      : null}
-                    </div></Grid>
-                    <Grid item xs={3} md={2}>
-                    <FormControlLabel  value="Start" control={<Switch color="primary" checked={checked} onChange={toggleChecked} />}  label={format} labelPlacement="start" />
-                  </Grid>
-                </Grid>
-              </FormularPanel>
-              <FormularPanel value={formularPanel} index={1} className={classes.tabPanel}>                
-                <Table className={classes.table} aria-label="simple table">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Name</TableCell>
-                    <TableCell>Code </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                  {
-                  Object.keys(Object(dataElement.disags)).map(
-                    key => 
-                    <TableRow key={Math.random()}>
-                      <TableCell component="th" scope="row">
-                      {Object(dataElement.disags)[key].name}
-                      </TableCell> 
-                      <TableCell component="th" scope="row">
-                      {Object(dataElement.disags)[key].code}
-                      </TableCell> 
-                    </TableRow>              
-                  )
-                  }
-                  </TableBody>
-                </Table>               
-              </FormularPanel>
-              {dataElement.extras && dataElement.extras.source === 'PDH' ? (
-                <FormularPanel value={formularPanel} index={2} className={classes.tabPanel}>
-                  <div className={classes.tableContainer} >
-                    <Table className={classes.table} aria-label="simple table">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell width="25%" align="center">Source Data Element</TableCell>
-                          <TableCell width="60" align="center" >Source Disaggregation</TableCell>
-                          <TableCell width="15%" align="center">+/-</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {
-                          (dataElement.extras.source_data_elements) ? populatePDHDerivatives(dataElement.extras.source_data_elements) : ''
-                        }
-                        {
-                          Object.keys(pdhDerivatives).map(                         
-                            (key, index) =>
-                              <TableRow key={"row_" + index}  style={{verticalAlign: 'top', border: '2px solid #C8C8C8', backgroundColor: (index % 2 === 0) ? "#F8F8F8" : "#F0F0F0" }}  >
-                                <TableCell component="th" scope="row" valign="top" rowSpan={pdhDerivatives[key].size} style={{ borderRight: '2px solid #C8C8C8'}} >
-                                  {key}
-                                </TableCell>
-                                <TableCell>
-                                  <Table>
-                                    <TableBody>                                 
-                                      {Object.keys(pdhDerivatives[key]).map((dissags, disIndex) =>
-                                        <TableRow key={"row_disag_" + index + "_"+ disIndex}>
-                                          <TableCell component="th" scope="row"  width="100%" >
-                                            {pdhDerivatives[key][dissags].substring(0, pdhDerivatives[key][dissags].length - 1)}
-                                          </TableCell>                                         
-                                        </TableRow>
-                                      )}
-                                  </TableBody>
-                                   </Table>
-                                </TableCell>
-                                <TableCell>
-                                  <Table>
-                                    <TableBody>
-                                  {Object.keys(pdhDerivatives[key]).map((dissags, disIndex) =>
-                                    <TableRow key={"row_disag_op_" + index + "_"+ disIndex}>
-                                      <TableCell component="th" scope="row" align="right">
-                                        {(pdhDerivatives[key][dissags].substring(pdhDerivatives[key][dissags].length - 1, pdhDerivatives[key][dissags].length)) == 1 ? '+' : '-'}
-                                      </TableCell>
-                                    </TableRow>
-                                  )}
-                                  </TableBody>
-                                   </Table>
-                                </TableCell>
-                              </TableRow>
-
-                          )
-                        }
-                      </TableBody>
-                    </Table>
-                    {pdhDerivatives = []}
-                  </div>
-                             
-                </FormularPanel>)
-              : null}
-            </div>
-          </ExpansionPanelDetails>
-        </ExpansionPanel>
-        }        
-          </Grid>
-        </Grid>
-        </ExpansionPanelDetails>
-      </ExpansionPanel>
-
+              </Grid>                       
       </div>
 
       ))}

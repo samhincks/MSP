@@ -60,6 +60,13 @@ import CompareArrowsIcon from '@material-ui/icons/CompareArrows';
 import styled from 'styled-components';
 import MenuItem from '@material-ui/core/MenuItem';
 import { TiArrowSortedDown } from 'react-icons/ti';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
+import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
+import ListItemText from '@material-ui/core/ListItemText';
+import Link from '@material-ui/core/Link';
+import Divider from '@material-ui/core/Divider';
 
 //tab panel function
 function TabPanel(props) {
@@ -98,6 +105,7 @@ const version = getConfig().source;
 const currentYear = getConfig().defaultYear
 const codeListMap = getCodeListMap();
 const codeListJson = getCodeList();
+const indicatorGroups = getConfig().indicatorGroups;
 
 const ActionButtonLabel = styled.p`
     margin:0;
@@ -308,7 +316,7 @@ const useStyles = makeStyles(theme => ({
 
   },
   errorMessage: {
-    textAlign: 'center',
+    //textAlign: 'center',
     color: '#FF0000',
     marginBottom: '0 !important'
   },
@@ -629,21 +637,23 @@ export default function Codelist() {
   const queryIndicators = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + version + '/concepts/?verbose=true&conceptClass="Reference+Indicator"&limit=0';
   const [indicators, setIndicators] = useState([""]);
   const [indicatorsTemp, setIndicatorsTemp] = useState([""]);
-  const [indicatorQuery, setIndicatorQuery] = useState("")
+  const [indicatorQuery, setIndicatorQuery] = useState("");
+  const [indicatorGroupQuery, setIndicatorGroupQuery] = useState("");
+  const [typeQuery, setTypeQuery] = useState("")
   const [hiddenDataSet, setHiddenDataSet] = useState(true)
   const [hiddenIndicator, setHiddenIndicator] = useState(true)
 
-  let queryAllIndicators = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + version + '/concepts/?verbose=true&conceptClass="Indicator"&limit=' + rowsPerPage + '&page=' + (page + 1);
-  let queryByDataType = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + version + '/concepts/?verbose=true&conceptClass="Indicator"&limit=' + rowsPerPage + '&page=' + (page + 1) + '&datatype=' + datatype;
+  let queryAllIndicators = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + version + '/concepts/?verbose=true&conceptClass="Indicator"&limit=' + rowsPerPage + '&page=' + (page + 1) + indicatorQuery + typeQuery + indicatorGroupQuery;
+  let queryByDataType = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + version + '/concepts/?verbose=true&conceptClass="Indicator"&limit=' + rowsPerPage + '&page=' + (page + 1) + '&datatype=' + datatype + indicatorQuery + typeQuery + indicatorGroupQuery;
 
-  let queryAllDenom = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + version + '/concepts/?verbose=true&conceptClass="Indicator"&limit=' + rowsPerPage + '&page=' + (page + 1);
-  let queryByDenom = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + version + '/concepts/?verbose=true&conceptClass="Indicator"&limit=' + rowsPerPage + '&page=' + (page + 1) + '&datatype=' + datatype;
+  let queryAllDenom = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + version + '/concepts/?verbose=true&conceptClass="Indicator"&limit=' + rowsPerPage + '&page=' + (page + 1) + indicatorQuery + typeQuery;
+  let queryByDenom = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + version + '/concepts/?verbose=true&conceptClass="Indicator"&limit=' + rowsPerPage + '&page=' + (page + 1) + '&datatype=' + datatype + indicatorQuery + typeQuery + indicatorGroupQuery;
 
-  let queryDataElementsAllPeriods = 'https://api.' + domain + '/orgs/' + org + '/collections/' + source + '/concepts/?verbose=true&conceptClass="Data+Element"&limit=' + rowsPerPage + '&page=' + (page + 1) + indicatorQuery;
-  let queryDataElementsByPeriod = 'https://api.' + domain + '/orgs/' + org + '/collections/' + source + period + '/concepts/?verbose=true&conceptClass="Data+Element"&limit=' + rowsPerPage + '&page=' + (page + 1) + indicatorQuery;
+  let queryDataElementsAllPeriods = 'https://api.' + domain + '/orgs/' + org + '/collections/' + source + '/concepts/?verbose=true&conceptClass="Data+Element"&limit=' + rowsPerPage + '&page=' + (page + 1) + indicatorQuery + typeQuery + indicatorGroupQuery;
+  let queryIndicatorsByPeriod = 'https://api.' + domain + '/orgs/' + org + '/sources/MER/concepts/?verbose=true&conceptClass="Indicator"&extras__Applicable+Periods=' + period + '&limit=' + rowsPerPage + '&page=' + (page + 1) + indicatorQuery + typeQuery + indicatorGroupQuery;
 
   const [collection, setCollection] = useState("");
-  let queryByCodeList = 'https://api.' + domain + '/orgs/' + org + '/collections/' + collection + '/concepts/?conceptClass="Data+Element"&verbose=true&limit=' + rowsPerPage + '&page=' + (page + 1) + indicatorQuery;
+  let queryByCodeList = 'https://api.' + domain + '/orgs/' + org + '/collections/' + collection + '/concepts/?conceptClass="Data+Element"&verbose=true&limit=' + rowsPerPage + '&page=' + (page + 1) + indicatorQuery + typeQuery +indicatorGroupQuery;
   const [deloading, setDELoading] = useState(false);
 
   if (search && search !== "") {
@@ -653,7 +663,7 @@ export default function Codelist() {
     queryByDenom = queryByDenom + "&q=" + search;
 
     queryDataElementsAllPeriods = queryDataElementsAllPeriods + "&q=" + search;
-    queryDataElementsByPeriod = queryDataElementsByPeriod + "&q=" + search;
+    queryIndicatorsByPeriod = queryIndicatorsByPeriod + "&q=" + search;
     queryByCodeList = queryByCodeList + "&q=" + search;
   }
 
@@ -661,8 +671,6 @@ export default function Codelist() {
 
   //get data-elements from context
   const [{ data_Elements, pdhDataElements, mohDataElements }] = useStateValue();
-
-
   const [dataElementsInitial, setDataElementsInitialData] = useState([]);
   var [dataElements, setDataElementsData] = useState([]);
   var [count, setCountOfValues] = useState(0);
@@ -672,9 +680,6 @@ export default function Codelist() {
 
   const loadDataElementsByPeriod = async () => {
     setDELoading(true)
-    //if (values.type === "All") {
-    //setDataElementsData([]);
-    //setCountOfValues(0);
     try {
       const response = [];
       let queryToRun = ""
@@ -684,13 +689,16 @@ export default function Codelist() {
         } else {
           queryToRun = queryByDataType
         }
-        console.log(" queryByDataType " + queryToRun)
       }
       else {
-
         queryToRun = queryByDenom
-        console.log(" queryByDenom " + queryByDenom)
       }
+      console.log("values " + JSON.stringify(values))
+      if (values.fiscal !== 'All') {
+        queryToRun = queryToRun + '&extras__Applicable+Periods=' + period
+      }
+      console.log(" queryToRun " + queryToRun)
+
       response = await fetch(queryToRun);
       if (!response.ok) {
         console.log(response);
@@ -742,18 +750,15 @@ export default function Codelist() {
       }
     }
     loadData();
-    //toggleDetailDrawer(de[params.get('dataElementid')], 'bottom', true)
   }, []);
 
   useEffect(() => {
     loadDataElementsByPeriod();
-  }, [queryAllIndicators, queryByDataType]);
+  }, [queryAllIndicators, queryByDataType, queryIndicatorsByPeriod]);
 
   const loadDataElementsData = async () => {
     if (collection !== "" && values.dataSet !== "All") {
       console.log(" queryByCodeList " + queryByCodeList)
-      //setDataElementsData([]);
-      //setCountOfValues(0);
       setDELoading(true)
       try {
         const response = await fetch(queryByCodeList);
@@ -829,14 +834,6 @@ export default function Codelist() {
     loadIndicatorsData();
   }, [queryIndicators]);
 
-  // class TreeNode {
-  //   constructor(value) {
-  //     this.value = value;
-  //     this.descendents = [];
-  //   }
-  // }
-  // let derivatives = new TreeNode('root');
-
   function populatePDHDerivatives(source_data_elements) {
     try {
       source_data_elements.map(source_data_element => {
@@ -869,28 +866,6 @@ export default function Codelist() {
           source_data_element_nameArray.push(source_category_option_combo_object);
           pdhDerivatives[source_data_element.source_data_element_name + ' [' + source_data_element.source_data_element_uid + ']'] = source_data_element_nameArray;
         }
-
-        // derivatives.descendents.map(
-        //   derivedDisagNode => {
-        //   if(derivedDisagNode.value === source_data_element.derived_category_option_combo_name){
-        //     derivedDisagNode.descendents.map(
-        //       sourceDENode => {
-        //         if(sourceDENode.value === source_data_element.source_data_element_name){
-        //           let sourceDisagNode = new TreeNode(source_data_element.source_category_option_combo_name + '|' + source_data_element.add_or_subtract)
-        //           sourceDENode.descendents.push(sourceDisagNode)
-        //         }
-        //       }
-        //     )
-        //   }
-        //   else{
-        //     let derivedDisagNode = new TreeNode(source_data_element.derived_category_option_combo_name)
-        //     let sourceDENode = new TreeNode(source_data_element.source_data_element_name)
-        //     let sourceDisagNode = new TreeNode(source_data_element.source_category_option_combo_name + '|' + source_data_element.add_or_subtract)
-        //     sourceDENode.descendents.push(sourceDisagNode)
-        //     derivedDisagNode.descendents.push(sourceDENode)
-        //     derivatives.descendents.push(derivedDisagNode)
-        //   }
-        // })
 
       })
     } catch (e) {
@@ -968,24 +943,27 @@ export default function Codelist() {
 
   //initial filter state
   const [values, setValues] = React.useState({
-    datatype: "All",
-    denom: "All"
+    fiscal: localStorage.getItem("fiscal_ind") ? localStorage.getItem("fiscal_ind") : "All",
+    indicator: localStorage.getItem("indicator_ind") ? localStorage.getItem("indicator_ind") : "All",
+    datatype: localStorage.getItem("datatype") ? localStorage.getItem("datatype") : "All",
+    denom: localStorage.getItem("denom") ? localStorage.getItem("denom") : "All",
+    indicatorGroup: localStorage.getItem("indicatorGroup") ? localStorage.getItem("indicatorGroup") : "All",
+    type: localStorage.getItem("type_ind") ? localStorage.getItem("type_ind") : "All"
   });
 
-  const type = ["All", "Results", "Target"];
-  //clear all filter values
-  // const clearValues = event => {
-  //   setValues(()=>({
-  //     fiscal: "",
-  //     source: "",
-  //     type: "", 
-  //     dataSet: "",
-  //     frequency: ""
-  //   }));
+  const type = ["All", "Result", "Target"];
+  const clearValues = event => {
+    setValues(() => ({
+      fiscal: "All",
+      indicator: "All",
+      datatype: "All",
+      denom: "All",
+      indicatorGroup: "All",
+      type: "All"
+    }));
 
-  //   setDataElements(data);
-  // }
-
+    //setDataElements(data);
+  }
 
   const handleSearchInputChange = () => {
     setSearchInputText(document.getElementById("inputSearch").value);
@@ -997,7 +975,6 @@ export default function Codelist() {
 
   const performSearch = event => {
     var searchText = document.getElementById("inputSearch").value;
-    // search:  q=*demo, q=*demo*, q=demo*.  Add * to the search string to search any string containing "tx_curr"  
     setSearch("*" + searchText + "*");
     setPage(0);
   }
@@ -1007,28 +984,13 @@ export default function Codelist() {
       return;
     }
     var compareText = document.getElementById("compareSearch") ? document.getElementById("compareSearch").value : '';
-    // if (!dataElementToCompare) {
-    //   if (compareText !== '') {
-    //     if (!de[compareText]) {
-    //       await getDataElement(compareText);
-    //     }
-    //     console.log("inside performCompare dataElement " + de[compareText])
-    //     toggleCompareDetailDrawer(dataElementDetail, de[compareText], 'bottom', true)
-    //   }
-    // } else {
-    //   if (!de[dataElementToCompare]) {
-    //     await getDataElement(dataElementToCompare);
-    //   }
-    //   console.log("inside performCompare dataElement " + de[dataElementToCompare])
-    //   toggleCompareDetailDrawer(dataElementDetail, de[dataElementToCompare], 'bottom', true)
-    // }
 
     let compareLink = ''
     if (!dataElementToCompare) {
-      compareLink = '/compareIndicators?id1=' + dataElementDetail.id + '&id2=' + compareText + '&indicatorDetail=true'
+      compareLink = '/indicators/compareIndicators?id1=' + dataElementDetail.id + '&id2=' + compareText + '&indicatorDetail=true'
 
     } else {
-      compareLink = '/compareIndicators?id1=' + dataElementDetail.id + '&id2=' + dataElementToCompare + '&indicatorDetail=true'
+      compareLink = '/indicators/compareIndicators?id1=' + dataElementDetail.id + '&id2=' + dataElementToCompare + '&indicatorDetail=true'
     }
     history.push(compareLink)
   }
@@ -1083,34 +1045,49 @@ export default function Codelist() {
     setCountOfValues(0)
 
     let t = values.datatype
-
+    let y = values.fiscal
+    let i = values.indicator
+    let rt = values.type
+    let ig = values.indicatorGroup
     setValues({
+      fiscal: y,
+      indicator: i,
       datatype: t,
-      denom: "All"
+      denom: "All",
+      type: rt,
+      indicatorGroup: ig
     })
     setDatatype(t);
-    // if (values.fiscal === "All") {
-    //   setPeriod("")
-    //   setHiddenDataSet(true)
-    // }
-    // else {
-    //   setPeriod("-FY" + (values.fiscal + "").substring(2, 4));
-    // }
+    console.log("datatype " + datatype)
+    localStorage.setItem("datatype", values.datatype);
   }, [values.datatype]);
 
-  //when fiscal changes
+  //when denom changes
   useEffect(() => {
     setDataElementsData([])
     setCountOfValues(0)
 
+    let y = values.fiscal
     let d = values.denom
     let t = values.datatype
+    let i = values.indicator
+    let rt = values.type
+    let ig = values.indicatorGroup
     setValues({
+      fiscal: y,
+      indicator: i,
       datatype: t,
-      denom: d
+      denom: d,
+      type: rt,
+      indicatorGroup: ig
     })
     if (values.denom === "All") {
-      setDatatype("")
+      if (values.datatype === "All") {
+        setDatatype("")
+      }
+      else {
+        setDatatype(t)
+      }
     }
     else if (values.denom === "Yes") {
       setDatatype('"Percentage"+OR+"Ratio"')
@@ -1119,94 +1096,70 @@ export default function Codelist() {
       setDatatype("Number")
     }
     console.log(" displaying " + dataElements.length + " results")
+    localStorage.setItem("denom", values.denom);
   }, [values.denom]);
 
   //when data set changes
-  // useEffect(() => {
-  //   setDataElementsData([])
-  //   setCountOfValues(0)
+  useEffect(() => {
+    setDataElementsData([])
+    setCountOfValues(0)
 
-  //   if (values.dataSet === "All") {
-  //     loadDataElementsByPeriod()
-  //   }
-  //   else {
-  //     codeListJson.codeList.map(cl => {
-  //       if (values.dataSet === cl.full_name) {
-  //         console.log(" dataset changed ")
-  //         setCollection(cl.id)
-  //       }
-  //     })
-  //     console.log(" displaying " + dataElements.length + " results")
-  //   }
-  // }, [values.dataSet]);
+    let year = values.fiscal
+    let dt = values.datatype
+    let de = values.denom
+    let i = values.indicator
+    let rt = values.type
+    let ig = values.indicatorGroup
+    setValues({
+      fiscal: year,
+      indicator: i,
+      datatype: dt,
+      denom: de,
+      type: rt,
+      indicatorGroup: ig
+    })
+    if (values.fiscal === "All") {
+      setPeriod("")
+    }
+    else {
+      setPeriod("FY" + (values.fiscal + "").substring(2, 4));
+
+    }
+    localStorage.setItem("fiscal_ind", values.fiscal);
+  }, [values.fiscal]);
+
+  //when indicator changes
+  useEffect(() => {
+    if (values.indicator === "All") {
+      setIndicatorQuery("")
+    }
+    else {
+      setIndicatorQuery("&extras__indicator=" + values.indicator)
+    }
+    localStorage.setItem("indicator_ind", values.indicator);
+  }, [values.indicator]);
+
+//when indicator group changes
+useEffect(() => {
+  if (values.indicatorGroup === "All") {
+    setIndicatorGroupQuery("")
+  }
+  else {
+    setIndicatorGroupQuery("&extras__indicatorGroups__id=" + indicatorGroups[values.indicatorGroup])
+  }
+  localStorage.setItem("indicatorGroup", values.indicatorGroup);
+}, [values.indicatorGroup]);
 
   //when type changes
-  // useEffect(() => {
-  //   setDataElementsData([])
-  //   setCountOfValues(0)
-
-  //   let s = values.source
-  //   let year = values.fiscal
-  //   let t = values.type
-  //   let f = values.frequency
-  //   let i = values.indicator
-  //   if (values.type === "All") {
-  //     setValues({
-  //       fiscal: year,
-  //       type: t,
-  //       dataSet: "All",
-  //       source: s,
-  //       frequency: f,
-  //       indicator: i
-  //     })
-  //   }
-  //   else {
-  //     let element = document.getElementById("dataSet");
-  //     let dataType = element.options[element.selectedIndex].text;
-  //     setValues({
-  //       fiscal: year,
-  //       type: t,
-  //       dataSet: dataType,
-  //       source: s,
-  //       frequency: f,
-  //       indicator: i
-  //     })
-  //   }
-  // }, [values.type]);
-
-  //when frequency changes
-  // useEffect(() => {
-  //   // setDataElementsData([])
-  //   // setCountOfValues(0)
-
-
-
-  //   if (values.frequency === "All") {
-  //     setIndicatorsTemp(indicators)
-  //   }
-  //   else {
-  //     setIndicatorsTemp([])
-  //     let indicatorList = []
-  //     indicators.map(indicator => {
-  //       if (indicator.extras["Reporting frequency"] === values.frequency) {
-  //         indicatorList.push(indicator)
-  //       }
-  //     })
-  //     setIndicatorsTemp(indicatorList)
-  //   }
-  // }, [values.frequency]);
-
-  // //when indicator changes
-  // useEffect(() => {
-  //   // setDataElementsData([])
-  //   // setCountOfValues(0)
-  //   if (values.indicator === "All") {
-  //     setIndicatorQuery("")
-  //   }
-  //   else {
-  //     setIndicatorQuery("&q='" + values.indicator + "'")
-  //   }
-  // }, [values.indicator]);
+  useEffect(() => {
+    if (values.type === "All") {
+      setTypeQuery("")
+    }
+    else {
+      setTypeQuery("&extras__resultTarget=" + values.type)
+    }
+    localStorage.setItem("type_ind", values.type);
+  }, [values.type]);
 
   async function getMappings(id) {
     let queryMapping = 'https://api.' + domain + '/orgs/' + org + '/sources/MER' + version + '/concepts/' + id + '/?includeMappings=true&includeInverseMappings=true';
@@ -1270,7 +1223,6 @@ export default function Codelist() {
     } catch (e) {
       console.log("error:" + e);
       setError(e.message);
-      //setErrorDisplay(e.message);
     }
 
 
@@ -1284,7 +1236,6 @@ export default function Codelist() {
       let options = {
         uri: queryMapping
       }
-      //const response = await rp(options)
       const response = await fetch(queryMapping);
       if (!response.ok) {
         console.log(response);
@@ -1295,14 +1246,8 @@ export default function Codelist() {
       }
 
       const jsonData = await response.json();
-      //const jsonData = JSON.parse(response)
       console.log("jsonData " + jsonData)
       de[id] = jsonData;
-      // if (!deMappings[id]) {
-      //   let sortedData = sortJSONByKey(jsonData.mappings, 'to_concept_name', 'asc');
-      //   deMappings[id] = sortedData;
-      //   setDataElementMapping(deMappings[id]);
-      // }
       return de[id]
     } catch (e) {
       console.log("error:" + e.message);
@@ -1374,12 +1319,12 @@ export default function Codelist() {
 
 
   };
- //set select popup
- const selectMenu = buttonName => event => {
-  setAnchorEl(anchorEl ? null : event.currentTarget);
-  setDropDownName(buttonName);
+  //set select popup
+  const selectMenu = buttonName => event => {
+    setAnchorEl(anchorEl ? null : event.currentTarget);
+    setDropDownName(buttonName);
 
-};
+  };
   const popOpen = Boolean(anchorEl);
   const popId = popOpen ? 'popover' : undefined;
   const popHandleClose = () => {
@@ -1401,7 +1346,7 @@ export default function Codelist() {
       }
       )
       UIDs = UIDs.substring(0, UIDs.length - 2)
-      downloadURL = 'https://api.' + domain + '/orgs/' + org + '/sources/MER/concepts/?paging=false&verbose=true&q=' + UIDs;
+      downloadURL = 'https://api.' + domain + '/orgs/' + org + '/sources/MER/concepts/?paging=false&verbose=true&limit=0&q=' + UIDs;
     }
     else {
       downloadURL = 'https://dev-de.datim.org/api/indicators' + '.' + downloadValue.trim() + '?filter=id:in:[' + selectedDataElement.toString().trim() + ']&fields=*&paging=false'
@@ -1416,29 +1361,6 @@ export default function Codelist() {
     downloadLink.click();
     revokeDownloadLink(downloadLink.href);
   }
-  // const performExport = event => {
-  //   let downloadURL = "";
-  //   if (exportValue.trim() === 'OCL') {
-  //     let UIDs = ''
-  //     Object.keys(selectedDataElement).map(key => {
-  //       UIDs = UIDs + '"' + key + '"OR'}
-  //     )
-  //     UIDs = UIDs.substring(0, UIDs.length - 2)
-  //     downloadURL = 'https://api.' + domain + '/orgs/' + org + '/sources/MER/concepts/?paging=false&verbose=true&q=' + UIDs;
-  //   }
-  //   else {
-  //       downloadURL = 'https://dev-de.datim.org/api/indicators' + '.' + exportValue.trim() + '?filter=id:in:[' + selectedDataElement.toString().trim() + ']&fields=*'
-  //   }
-  //   console.log("downloadURL " + downloadURL)
-  //   let downloadLink = document.createElement('a');
-  //   downloadLink.href = downloadURL;
-  //   if (downloadValue.trim() !== "CSV") {
-  //     downloadLink.setAttribute("target", "_blank");
-  //   }
-  //   downloadLink.setAttribute('download', "download");
-  //   downloadLink.click();
-  //   revokeDownloadLink(downloadLink.href);
-  // }
 
   function revokeDownloadLink(href) {
     setTimeout(function () {
@@ -1462,11 +1384,7 @@ export default function Codelist() {
     setCompare({ ...compare, [name]: event.target.checked });
   };
 
-
   const { DATIM, PDH, MOH } = compare;
-
-
-
 
   //setup the comparison panel
   const [selectedDatim, setSelectedDatim] = React.useState([]);
@@ -1485,16 +1403,8 @@ export default function Codelist() {
         setDialogOpen(true);
         setDialogMessage("Please select 2-3 indicators")
       }
-
       else {
         setCompare({ ...comparePanel, [DATIM]: true });
-        //setComparePanel({ ...comparePanel, [side]: open });
-
-        //const selectDataTemp = [];
-
-        //get data element details of the selected data elements
-
-        // eslint-disable-next-line array-callback-return
 
         let temp = []
         Object.values(selectDataTemp).map(value => {
@@ -1506,12 +1416,8 @@ export default function Codelist() {
         Object.keys(selectedDataElement).map(key => {
           compareLink = compareLink + 'id' + (parseInt(key) + 1) + '=' + selectedDataElement[key] + '&'
         })
-        compareLink = '/compareIndicators?' + compareLink.substring(0, compareLink.length - 1)
+        compareLink = '/indicators/compareIndicators?' + compareLink.substring(0, compareLink.length - 1)
         history.push(compareLink)
-
-        //return <Redirect to={compareLink}/> 
-
-        //setComparePage("/compare")
       }
     }
     else {
@@ -1519,15 +1425,17 @@ export default function Codelist() {
     }
   };
 
-  //const openCompareDrawer = 
-
   const toggleDetailDrawer = (dataElement, side, open) => event => {
     if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
       return;
     }
     setDataElementDetail(dataElement);
-    setDetailPanel({ ...detailPanel, [side]: open });
-    if (!open) {
+    //setDetailPanel({ ...detailPanel, [side]: open });
+    if (open) {
+      history.push('/indicators/indicatorDetail?id=' + dataElement.id)
+    }
+    else {
+      setShowLinked(false)
       history.push('/indicators')
     }
 
@@ -1656,65 +1564,84 @@ export default function Codelist() {
   return (
     <Route render={(history) => (
       <div>
-
-
-        {/* <div>
-        { 
-          data &&
-          data.length > 0 &&
-          data.map(dataTemp => 
-        <div key={dataTemp.id}>id:{dataTemp.external_id} -  name: {dataTemp.display_name}</div>)
-        } 
-      </div> */}
-
-
-
         <div className={classes.container}>
 
           {/* hero section */}
           <Grid container alignItems="center" >
             {<Grid item xs={12} md={7} >
-              {/* <headings.H1>Data Elements</headings.H1> */}
-              {/* <Breadcrumb></Breadcrumb> */}
             </Grid>}
 
             <Grid item xs={12} md={5} justifycontent="flex-end" >
             </Grid>
           </Grid>
           {/* </div> */}
-
-
-          {errorDisplay !== null ?
-            <div className={classes.errorMessage}>{errorDisplay}</div>
-            // <Alert severity="error">{errorDisplay}</Alert>
-            : null}
-
-
-
-
-
-          {/* <div className={classes.container}> */}
+          
           <Grid container>
-
-
             {/* filters */}
             <Grid item xs={12} md={3}>
 
               <Shortcut ></Shortcut>
               <Paper className={classes.sidebar}>
                 <div className={`${classes.container} ${classes.sidebarContainer}`}>
-
-
                   <h4 className={classes.sidebarTitle}>Indicator Filters</h4>
-
-
                   <form autoComplete="off">
 
+                    {/* fiscal year filter */}
+                    <Grid item xs={12} className={classes.filter} >
+                      <FormControl className={classes.formControl}>
+                        <InputLabel htmlFor="fiscal">Fiscal Year</InputLabel>
+                        <Select
+                          native
+                          value={values.fiscal}
+                          onChange={handleFilterChange}
+                          className={classes.select}
+                          inputProps={{
+                            name: 'fiscal',
+                            id: 'fiscal',
+                            classes: {
+                              icon: classes.selectIcon
+                            }
+                          }}
 
+                        >
+                          {/* <option value={"All"} /> */}
+                          {
 
-                    {/* source filter */}
+                            Object.keys(codeListMap).reverse().map(
 
+                              key => <option key={Math.random()} >{key}</option>
+                            )
+                          }
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    {/* Reference indicator filter */}
+                    <Grid item xs={12} className={classes.filter} >
+                      <FormControl className={classes.formControl}>
+                        <InputLabel htmlFor="indicator">Reference Indicators</InputLabel>
+                        <Select
+                          native
+                          value={values.indicator}
+                          onChange={handleFilterChange}
+                          className={classes.select}
+                          inputProps={{
+                            name: 'indicator',
+                            id: 'indicator',
+                            classes: {
+                              icon: classes.selectIcon
+                            }
+                          }}
 
+                        >
+                          <option value={'All'}>All</option>
+
+                          {indicatorsTemp.map(key => <option key={Math.random()} value={key.id} >{key.display_name}</option>)
+                          }
+
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    {/* data type filter */}
                     <Grid item xs={12} className={classes.filter} >
                       <FormControl className={classes.formControl}>
 
@@ -1744,7 +1671,7 @@ export default function Codelist() {
                     </Grid>
 
 
-                    {/* denominator year filter */}
+                    {/* denominator filter */}
                     <Grid item xs={12} className={classes.filter} >
                       <FormControl className={classes.formControl}>
                         <InputLabel htmlFor="fiscal">Has Denominator</InputLabel>
@@ -1769,182 +1696,60 @@ export default function Codelist() {
                       </FormControl>
                     </Grid>
 
+                    {/* indicator groups filter */}
+                    <Grid item xs={12} className={classes.filter}  >
+                      <FormControl className={classes.formControl}>
+                        <InputLabel htmlFor="type">Indicator Groups</InputLabel>
+                        <Select size="3"
+                          native
+                          value={values.indicatorGroup}
+                          onChange={handleFilterChange}
+                          className={classes.select}
+                          inputProps={{
+                            name: 'indicatorGroup',
+                            id: 'indicatorGroup',
+                            classes: {
+                              icon: classes.selectIcon
+                            }
 
-                    {/* <fieldset className={`${classes.fieldset} ${hiddenDataSet ? classes.hide : ''}`}> */}
+                          }}
+                        >
+                          <option value={"All"}>All</option>
+                          {
+                            Object.keys(indicatorGroups).map(key => <option key={Math.random()} >{key}</option>)
+                          }
+                        </Select>
+                      </FormControl>
+                    </Grid>
+
                     {/* type filter */}
-                    {/* <Grid item xs={12} className={classes.filter}  >
-                        <FormControl className={classes.formControl}>
-
-                          <InputLabel htmlFor="type">Type</InputLabel>
-                          <Select size="3"
-                            native
-                            value={values.type}
-                            onChange={handleFilterChange}
-                            className={classes.select}
-                            inputProps={{
-                              name: 'type',
-                              id: 'type',
-                              classes: {
-                                icon: classes.selectIcon
-                              }
-
-                            }}
-
-                          >
-                            {(values.fiscal === 'All') ? (<option value={'All'}>All</option>) :
-                              type.map(key => <option key={Math.random()} >{key}</option>)
-                            } */}
-
-                    {/* <option value={'SIMS'}>SIMS</option> */}
-                    {/* </Select>
-                        </FormControl>
-                      </Grid> */}
-
-
-
-
-                    {/* data set filter */}
-                    {/* <Grid item xs={12} className={advanced ? classes.filter : classes.hide}> */}
-                    {/* <Grid item xs={12} className={classes.filter}>
-                        <FormControl className={`${classes.formControl} ${hiddenDataSet ? classes.hide : ''}`}>
-                          <InputLabel htmlFor="dataSet">Code List</InputLabel>
-                          <Select
-                            //size={Object.values(codeListMap[values.fiscal]).length +""}
-                            native
-                            value={values.dataSet}
-                            onChange={handleFilterChange}
-                            className={classes.select}
-                            inputProps={{
-                              name: 'dataSet',
-                              id: 'dataSet',
-                              classes: {
-                                icon: classes.selectIcon
-                              },
-                              disabled: values.source === 'PDH'
-                            }}
-
-                          >
-                            {(values.type === 'All') ? (<option value={'All'}>All</option>) : ([])}
-                            {(values.type === 'All') ? (Object.values(codeListMap[values.fiscal]).map(
-
-                              key => <option key={Math.random()} >{key}</option>)) : ([])}
-                            {Object.values(codeListMap[values.fiscal]).map(
-
-                              key => key.includes(values.type) ? (<option key={Math.random()} >{key}</option>) : ([])
-                            )
-                            }
-                          </Select>
-                        </FormControl>
-                      </Grid>
-                    </fieldset> */}
-                    {/* <Grid item xs={12} className={classes.filter}>
-                    <FormControl className={classes.formControl}>
-
-                      <Table className={classes.table} aria-label="simple table">
-                        <TableBody>
-                          {(values.type === 'All') ? (<TableRow key={Math.random()}>
-                            <TableCell component="th" scope="row">
-                              All
-                                      </TableCell>
-                          </TableRow>) : ([])}
-                          {Object.values(codeListMap[values.fiscal]).map(
-
-                            key => key.includes(values.type) ? (
-                              <TableRow key={Math.random()} >
-                                <TableCell component="th" scope="row" onClick={handleTableClick}>
-                                {key} 
-                                </TableCell>
-                              </TableRow>
-                            ) : ([])
-                          )}
-
-                        </TableBody>
-                      </Table>
-
-                      {(values.type === 'All') ? (<option value={'All'}>All</option>) : ([])}
-                        {Object.values(codeListMap[values.fiscal]).map(
-
-                          key => key.includes(values.type) ? (<option key={Math.random()} >{key}</option>) : ([])
-                        )
-                        }
-
-                    </FormControl>
-                  </Grid> */}
-
-                    {/* <fieldset className={classes.fieldset}> */}
-
-                    {/* frequency filter */}
-                    {/* <Grid item xs={12} className={advanced ? classes.filter : classes.hide} > */}
-                    {/* <Grid item xs={12} className={classes.filter} >
-                        <FormControl className={classes.formControl}>
-                          <InputLabel htmlFor="frequency">Reporting Frequency</InputLabel>
-                          <Select
-                            native
-                            value={values.frequency}
-                            onChange={handleFilterChange}
-                            className={classes.select}
-                            inputProps={{
-                              name: 'frequency',
-                              id: 'frequency',
-                              classes: {
-                                icon: classes.selectIcon
-                              }
-                            }}
-
-                          >
-                            <option value={"All"}>All</option>
-                            <option value={'Annually'}>Annually</option>
-                            <option value={'Semi-Annually'}>Semi-Annually</option>
-                            <option value={'Quarterly'}>Quarterly</option>
-
-                          </Select>
-                        </FormControl>
-                      </Grid> */}
-
-                    {/* indicator filter */}
-                    {/* <Grid item xs={12} className={advanced ? classes.filter : classes.hide} > */}
-                    {/* <Grid item xs={12} className={classes.filter} >
-                        <FormControl className={classes.formControl}>
-                          <InputLabel htmlFor="indicator">Reference Indicators</InputLabel>
-                          <Select
-                            native
-                            value={values.indicator}
-                            onChange={handleFilterChange}
-                            className={classes.select}
-                            inputProps={{
-                              name: 'indicator',
-                              id: 'indicator',
-                              classes: {
-                                icon: classes.selectIcon
-                              }
-                            }}
-
-                          >
-                            <option value={'All'}>All</option>
-
-                            {indicatorsTemp.map(key => <option key={Math.random()} value={key.id} >{key.display_name}</option>)
+                    <Grid item xs={12} className={classes.filter}  >
+                      <FormControl className={classes.formControl}>
+                        <InputLabel htmlFor="type">Result/Target</InputLabel>
+                        <Select size="3"
+                          native
+                          value={values.type}
+                          onChange={handleFilterChange}
+                          className={classes.select}
+                          inputProps={{
+                            name: 'type',
+                            id: 'type',
+                            classes: {
+                              icon: classes.selectIcon
                             }
 
-                          </Select>
-                        </FormControl>
-                      </Grid>
-                    </fieldset> */}
+                          }}
+                        >
+                          {
+                            type.map(key => <option key={Math.random()} >{key}</option>)
+                          }
+                        </Select>
+                      </FormControl>
+                    </Grid>
                   </form>
-
-                  {/* filter functions */}
-                  {/* <Button onClick={displayAdvanced} className={classes.toggleFilters}>
-      {advanced ? 'Less Filters' : 'More Filters'}
-</Button> */}
-                  {/* <Button variant="outlined" onClick={clearValues} className={classes.filterButton}>
-       Clear Filters
-</Button> */}
-
-
-
-
-
-
-
+                  <Button variant="outlined" onClick={clearValues} className={classes.filterButton}>
+                    Clear Filters
+                  </Button>
                 </div>
 
               </Paper>
@@ -1956,27 +1761,23 @@ export default function Codelist() {
               <div className={classes.tabDashboard}>
                 <div>
                   <div style={{ flexDirection: 'row', display: 'flex' }} >
-                    {/* {selectedDataElement && selectedDataElement.length > 0 ?
-                    <Button variant="outlined" className={classes.actionButton} onClick={clearSelectedDataElements} id="clearDataElementButton">
-                      <ActionButtonLabel> Clear Selection   <span style={{ background: '#D3D3D3', marginLeft: '2px', paddingLeft: '5px', paddingRight: '5px', borderRadius: '5px' }}> {selectedDataElement.length}</span></ActionButtonLabel></Button>
-                    : null} */}
                     <div>
                       <Tooltip disableFocusListener title="Download">
                         <i>
                           <Button variant="outlined" className={classes.actionButton} onClick={dropDownMenu("download")} id="downloadButton"
-                           disabled={selectedDataElement.length === 0 ? true : false} style={{height:'48px', width:'80px', marginBottom: '10px'}}>
+                            disabled={selectedDataElement.length === 0 ? true : false} style={{ height: '48px', width: '80px', marginBottom: '10px' }}>
                             {/* <ActionButtonLabel> Download Indicators</ActionButtonLabel> */}
                             {
                               selectedDataElement.length === 0 ?
                                 <GetAppIcon /> : <GetAppIcon style={{ color: '#1D5893' }} />
                             }
                           </Button></i></Tooltip></div>
-                          <div >
+                    <div >
                       <Tooltip disableFocusListener disableTouchListener title="Compare 2 or 3 Indicators">
                         <i >
                           <Button variant="outlined" className={classes.actionButton} disabled={selectedDataElement.length < 2 || selectedDataElement.length > 3 ? true : false}
                             onClick={toggleDrawer('bottom', true)}
-                            id="comparisonButton" style={{height:'48px', width:'80px', marginBottom: '10px'}}>
+                            id="comparisonButton" style={{ height: '48px', width: '80px', marginBottom: '10px' }}>
                             {/* <ActionButtonLabel> Compare Indicators</ActionButtonLabel> */}
                             {
                               selectedDataElement.length < 2 || selectedDataElement.length > 3 ?
@@ -2006,32 +1807,28 @@ export default function Codelist() {
 
                 <div style={{ flexDirection: 'row', display: 'flex' }} >
                   <div>
-
                     <Tooltip disableFocusListener title="Select">
                       <Button style={{ marginTop: '10px' }}>
                         {selectedDataElement.length == 0 ? <Checkbox inputProps={{ 'aria-label': 'uncontrolled-checkbox' }} onClick={selectAll}
-                          style={{ padding: '5px', marginLeft: '10px' }} /> : ''}
+                          style={{ padding: '5px' }} /> : ''}
                         {selectedDataElement.length > 0 && selectedDataElement.length < dataElements.length ?
                           <Checkbox
                             defaultChecked
                             indeterminate
                             inputProps={{ 'aria-label': 'indeterminate checkbox' }}
                             onClick={clearAll}
-                            style={{ padding: '5px', marginLeft: '10px' }}
+                            style={{ padding: '5px' }}
                           /> : ''}
-                        {selectedDataElement.length == dataElements.length ? <Checkbox
+                        {selectedDataElement.length > 0 && selectedDataElement.length == dataElements.length ? <Checkbox
                           checked={checked}
                           onChange={handleChange}
                           inputProps={{ 'aria-label': 'primary checkbox' }}
                           onClick={selectAll}
-                          style={{ padding: '5px', marginLeft: '10px' }}
+                          style={{ padding: '5px' }}
                         /> : ''}
-
                         <TiArrowSortedDown onClick={selectMenu('select')} />
-
                       </Button>
                     </Tooltip>
-
                   </div>
                   <div style={{ width: '500px' }}>
                     <Paper component="form" className={classes.search}>
@@ -2096,11 +1893,11 @@ export default function Codelist() {
 
                       //  select popover panel
                       <FormControl component="fieldset" className={classes.popOver}>
-                          <FormGroup>
-                            <MenuItem value="All" onClick={selectAll}>All</MenuItem>
-                            <MenuItem value="None" onClick={clearAll}>None</MenuItem>
-                          </FormGroup>
-                        </FormControl>
+                        <FormGroup>
+                          <MenuItem value="All" onClick={selectAll}>All</MenuItem>
+                          <MenuItem value="None" onClick={clearAll}>None</MenuItem>
+                        </FormGroup>
+                      </FormControl>
 
                   }
 
@@ -2121,56 +1918,36 @@ export default function Codelist() {
               }
               {/* data elements */}
               {/* {dataElements.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(dataElement => ( */}
-              {/* {/* <ErrorBoundary> */}
-              {dataElements.map(dataElement => (
+              <ErrorBoundary>
+                <List>
+                {errorDisplay !== null ?
+            <div className={classes.errorMessage}>{errorDisplay}</div>
+            // <Alert severity="error">{errorDisplay}</Alert>
+            : null}
+                  {dataElements.map(dataElement => (
 
-                <div key={dataElement.id}>
 
-                  <ExpansionPanel className={classes.dataelementContainer}
-                    TransitionProps={{ unmountOnExit: true, mountOnEnter: true }}
-                    onClick={() => !de[dataElement.id] ?
-                      getDataElement(dataElement.id) : ''}
+                    [<ListItem dense button style={{ backgroundColor: selectedDataElement.includes(dataElement.id) ? '#f2dee5' : '' }}>
 
-                  >
-                    {/* data elements summary */}
-                    <ExpansionPanelSummary
-                      expandIcon={<ExpandMoreIcon />}
-                      aria-controls="panel1a-content"
-                      id="panel1a-header"
-                      className={classes.expansionPanelSummary}
-                      style={{ backgroundColor: selectedDataElement.includes(dataElement.id) ? '#f2dee5' : 'white' }}
-
-                    >
-                      <ErrorBoundary>
-                        <FormControlLabel
+                      <ListItemIcon>
+                        <Checkbox
                           aria-label="Acknowledge"
                           onClick={handleCompareCheckbox(dataElement)}
                           onFocus={event => event.stopPropagation()}
-                          control={<Checkbox />}
                           checked={selectedDataElement.includes(dataElement.id) ? true : false}
-
+                          edge="start"
                         // label="I acknowledge that I should stop the click event propagation"
                         />
+                      </ListItemIcon>
+                      <ListItemText >
                         <Grid container alignItems="center"
                           //justify="space-between"
                           spacing={1}>
-                          <Grid item xs={9}  >
+                          <Grid item xs={12}  >
                             <Typography className={classes.heading}>
-                              {dataElement.display_name}
+                              <Link href={"/indicators/indicatorDetail?id=" + dataElement.id} style={{ textDecoration: 'underline' }}>{dataElement.display_name}</Link>
                             </Typography>
                           </Grid>
-
-                          <Grid item xs={3}>
-                            {/* <Typography>
-                          <strong>Data Element UID</strong>: {dataElement.external_id}
-                        </Typography> */}
-                          </Grid>
-                          {/* <Chip
-                            variant="outlined"
-                            size="small"
-                            label={"UID: " + dataElement.external_id}
-                          //onClick={handleClick}
-                          /></Grid> */}
                           <Grid item xs={2} md={3}>
                             <Tooltip disableFocusListener title="Click to copy UID">
                               <span className={classes.chip}
@@ -2186,283 +1963,13 @@ export default function Codelist() {
                             >{"Type: " + dataElement.concept_class}</span></Grid>
                           <Grid item xs={3} ></Grid>
                         </Grid>
-                      </ErrorBoundary>
-                    </ExpansionPanelSummary>
+                      </ListItemText>
+                    </ListItem>,
+                    <Divider variant="inset" component="li" />]
 
-
-
-                    {/* data elements details */}
-                    <ExpansionPanelDetails
-                      className={classes.expansionPanelDetails}
-
-                    >
-                      <Grid container>
-
-                        <Grid item xs={12} className={classes.expansionPanelLeft}>
-
-                        </Grid>
-                        <Grid item xs={12} className={classes.expansionPanelLeft}>
-                          <strong>Indicator Groups: </strong> {
-                            dataElement.extras.indicatorGroups ? (dataElement.extras.indicatorGroups.length > 0 ? (Object.values(dataElement.extras.indicatorGroups).map(
-
-                              value =>
-
-                                value.name + ", "
-
-                            )
-                            ) : '--') : '--'
-                          }
-                          <br></br><br></br>
-                          <strong>Data Type: </strong> {dataElement.datatype ? dataElement.datatype : '--'}
-                          <br></br><br></br>
-                          <strong>Numerator Description: </strong> {dataElement.extras.numeratorDescription ? dataElement.extras.numeratorDescription : '--'}
-                          <br></br><br></br>
-                          <strong>Denominator Description: </strong> {dataElement.extras.denominatorDescription ? dataElement.extras.denominatorDescription : '--'}
-                        </Grid>
-
-                        <Grid item xs={12} className={classes.expansionPanelLeft}>
-                          {/* <ExpansionPanelActions> */}
-                          <Button variant="outlined" className={classes.detailsButton} onClick={toggleDetailDrawer(dataElement, 'bottom', true)} color="primary">
-                            View Indicator Details
-                </Button>
-                          {/* </ExpansionPanelActions> */}
-                        </Grid>
-
-                      </Grid>
-                    </ExpansionPanelDetails>
-                    <ExpansionPanel className={classes.dataElementContainer}
-                      TransitionProps={{ unmountOnExit: true, mountOnEnter: true }}
-                      onClick={() => !de[dataElement.id] ?
-                        getDataElement(dataElement.id) : ''}
-                    >
-                      <ExpansionPanelSummary
-                        expandIcon={<ExpandMoreIcon />}
-                        aria-controls="panel1a-content"
-                        id="panel1a-header"
-                        className={`${classes.expansionPanelSummary} ${classes.formulaButton}`}
-                        onClick={() => !de[dataElement.id] ?
-                          getDataElement(dataElement.id) : ''}
-                      >
-                        <Typography className={classes.heading} ><strong>Formula</strong></Typography>
-                      </ExpansionPanelSummary>
-                      <ExpansionPanelDetails className={classes.expansionPanelDetails} >
-                        <ErrorBoundary>
-                          {/* <Route render={() => ( */}
-                          {/* <div className={classes.tableContainer}> */}
-                          <Tabs value={panel} onChange={handleChange} className={classes.tabContainer} classes={{ indicator: classes.bigIndicator }}>
-                            <Tab label="INDICATOR FORMULA" {...a11yProps(0)} />
-                            <Tab label="INDICATOR TABLE" {...a11yProps(1)} />
-                          </Tabs>
-                          <TabPanel value={panel} index={0} className={classes.tabPanel}>
-                            <Grid container alignItems="center" justify="space-between">
-                              <Grid   >
-                                <div className={classes.tableContainer}>
-                                  <strong>Numerator: </strong>
-                                  {
-                                    checked ? dataElement.extras.numerator : dataElement.extras.numeratorReadableFormula
-                                  }<br></br><br></br>
-                                  <strong>Denominator: </strong>
-                                  {
-                                    checked ? dataElement.extras.denominator : dataElement.extras.denominatorReadableFormula
-                                  }
-                                </div></Grid>
-                              <Grid item xs={3} >
-                                <FormControlLabel
-                                  value="Start"
-                                  control={<Switch color="primary" checked={checked} onChange={toggleChecked} />}
-                                  label={format}
-                                  labelPlacement="start"
-                                />
-                              </Grid>
-                            </Grid>
-                          </TabPanel>
-                          <TabPanel value={panel} index={1} className={classes.tabPanel}>
-                            <Grid item xs={12} className={classes.comboTable}>
-
-
-
-
-                              <Table className={classes.table} aria-label="simple table">
-                                <TableHead>
-                                  {/* <TableRow>
-                                    <TableCell>Name</TableCell>
-                                    <TableCell>Code</TableCell>
-                                  </TableRow> */}
-                                </TableHead>
-                                <TableBody>
-                                  {
-                                    (deMappings[dataElement.id]) ? Object.keys(Object(deMappings[dataElement.id])).map(
-
-                                      key =>
-                                        Object(deMappings[dataElement.id])[key].map_type === 'Has Option' ? (
-                                          <TableRow key={Math.random()}>
-                                            <TableCell component="th" scope="row">
-                                              {Object(deMappings[dataElement.id])[key].to_concept_name}
-                                            </TableCell>
-                                            <TableCell component="th" scope="row">
-                                              {Object(deMappings[dataElement.id])[key].to_concept_code}
-                                            </TableCell>
-                                          </TableRow>
-                                        ) : ''
-                                    ) : ''
-                                  }
-                                </TableBody>
-                              </Table>
-                            </Grid>
-                          </TabPanel>
-
-                          {/* <TabPanel value={panel} index={2} className={classes.tabPanel} > */}
-                          {/* <Table className={classes.table} aria-label="simple table">
-                                  <TableHead>
-                                    <TableRow>
-                                      <TableCell>Source Data Element</TableCell>
-                                      <TableCell>Source Disaggregation</TableCell>
-                                      <TableCell>+/-</TableCell>
-                                    </TableRow>
-                                  </TableHead>
-                                  <TableBody>
-                                    {
-                                      (dataElement.extras.source_data_elements) ? populatePDHDerivatives(dataElement.extras.source_data_elements) : ''
-                                    }
-                                    {
-                                      Object.keys(pdhDerivatives).map(
-
-                                        key =>
-                                          <TableRow key={Math.random()}>
-                                            <TableCell component="th" scope="row" rowSpan={pdhDerivatives[key].size}>
-                                              {key}
-                                            </TableCell>
-                                            <TableCell>
-                                              {Object.keys(pdhDerivatives[key]).map(dissags =>
-                                                <TableRow key={Math.random()}>
-                                                  <TableCell component="th" scope="row" width="300">
-                                                    {pdhDerivatives[key][dissags].substring(0, pdhDerivatives[key][dissags].length - 1)}
-                                                  </TableCell>
-                                                </TableRow>
-                                              )}
-                                            </TableCell>
-                                            <TableCell>
-                                              {Object.keys(pdhDerivatives[key]).map(dissags =>
-                                                <TableRow key={Math.random()}>
-                                                  <TableCell component="th" scope="row" align="right">
-                                                    {(pdhDerivatives[key][dissags].substring(pdhDerivatives[key][dissags].length - 1, pdhDerivatives[key][dissags].length)) == 1 ? '+' : '-'}
-                                                  </TableCell>
-                                                </TableRow>
-                                              )}
-                                            </TableCell>
-                                          </TableRow>
-
-                                      )
-                                    }
-                                  </TableBody>
-                                </Table> */}
-                          {/* {pdhDerivatives = []} */}
-                          {/* {
-                              (dataElement.extras.source_data_elements) ? populatePDHDerivatives(dataElement.extras.source_data_elements) : ''
-                            } */}
-                          {/* <TableHead>
-                                    <TableRow>
-                                    <TableCell>Derived Disaggregate</TableCell>
-                                      <TableCell>Source Data Element</TableCell>
-                                      <TableCell>Source Disaggregation</TableCell>
-                                      <TableCell>+/-</TableCell>
-                                    </TableRow>
-                                  </TableHead>
-                                  <TableBody>
-                                  {
-                                      Object.keys(derivedCoC).map(
-                                        key =>
-                                        <TableRow key={Math.random()}>
-                                            <TableCell component="th" scope="row" rowSpan={derivedCoC[key].size}>
-                                              {key}
-                                            </TableCell>
-                                            {Object.values(derivedCoC[key]).map(
-                                              value =>
-                                            <TableRow>
-                                            <TableCell component="th" scope="row" rowSpan={pdhDerivatives[value].size}>
-                                              {value}
-                                            </TableCell>
-                                            <TableCell>
-                                              {Object.keys(pdhDerivatives[value]).map(dissags =>
-                                                <TableRow key={Math.random()}>
-                                                  <TableCell component="th" scope="row" width="300">
-                                                    {pdhDerivatives[value][dissags].split('|')[0]}
-                                                  </TableCell>
-                                                </TableRow>
-                                              )}
-                                            </TableCell>
-                                            <TableCell>
-                                              {Object.keys(pdhDerivatives[value]).map(dissags =>
-                                                <TableRow key={Math.random()}>
-                                                  <TableCell component="th" scope="row" align="right">
-                                                    {(pdhDerivatives[value][dissags].split('|')[1]) == 1 ? '+' : '-'}
-                                                  </TableCell>
-                                                </TableRow>
-                                              )}
-                                            </TableCell>
-                                            </TableRow>
-                                           
-                                            )}
- </TableRow>
-                                      )
-                                    }
-                                    </TableBody> */}
-                          {/* <Grid container alignItems="center" justify="space-between">
-                              <Grid item xs={6}></Grid>
-                              <Grid item xs={3}></Grid>
-                              <Grid item xs={3}>
-                                <div>
-                                  {expanded.length !== 0 ? <Button variant="outlined" color="primary" onClick={collapseAll(Object.keys(derivedCoC).concat(Object.keys(pdhDerivatives)))}>Collapse All</Button>
-                                    :
-                                    <Button variant="outlined" color="primary" onClick={expandAll(Object.keys(derivedCoC).concat(Object.keys(pdhDerivatives)))}>Expand All</Button>}
-                                </div>
-                              </Grid>
-                            </Grid>
-                            {dataElement.extras.source_data_elements ?
-                              <TreeView
-                                className={classes.derivatives}
-                                defaultCollapseIcon={<ExpandMoreIcon />}
-                                defaultExpanded={expanded}
-                                defaultExpandIcon={<ChevronRightIcon />}
-                                style={{ overflow: 'scroll', width: '800px' }}
-
-                              >
-                                {
-                                  Object.keys(derivedCoC).map(
-                                    key =>
-                                      <TreeItem key={key} nodeId={key} label={"Derived COC: " + key} >
-                                        {Object.values(derivedCoC[key]).map(
-                                          value =>
-                                            <TreeItem nodeId={value} label={"Source Data Element: " + value}>
-                                              {Object.values(pdhDerivatives[value]).map(
-                                                coc =>
-                                                  key === coc.derivedDisag ?
-                                                    <TreeItem nodeId={coc.sourceDisag} label={"Source COC: " +(coc.sourceDisag.split('|')[0] + ' ............................... ' + (coc.sourceDisag.split('|')[1] == 1 ? ' ADD' : ' SUB'))}>
-                                                    </TreeItem>
-                                                    : ''
-                                              )}
-                                            </TreeItem>
-                                        )}
-
-                                      </TreeItem>
-                                  )
-                                }
-
-                              </TreeView> : 'There are no derivations for this selection'}
-                            </TabPanel> */}
-                          {/* {pdhDerivatives = []}
-                        {derivedCoC = []} */}
-                          {/* </div> */}
-
-                        </ErrorBoundary>
-                      </ExpansionPanelDetails>
-                    </ExpansionPanel>
-                  </ExpansionPanel>
-
-                </div>
-
-              ))}
-              {/* </ErrorBoundary> */}
+                  ))}
+                </List>
+              </ErrorBoundary>
               {/* </Parent> */}
 
               <table>
